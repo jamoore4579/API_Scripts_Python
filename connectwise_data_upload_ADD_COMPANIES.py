@@ -29,17 +29,31 @@ def read_companies_from_csv(file_path):
 
 def create_company_in_connectwise(company_data):
     try:
-        # Prepare the payload for the API request
+        # Prepare the payload for the API request, updated with new fields
         payload = {
             "name": company_data['Name'],
             "identifier": company_data['Identifier'],
-            "addressLine1": company_data['addressLine1'],
-            "city": company_data['city'],
-            "state": company_data['state'],
-            "zip": company_data['zip'],
-            "phoneNumber": company_data['phoneNumber'],
-            "territory": company_data['territory'],
-            "category": company_data['Category']
+            "addressLine1": company_data.get('addressLine1', ""),
+            "city": company_data.get('city', ""),
+            "state": company_data.get('state', ""),
+            "zip": company_data.get('zip', ""),
+            "phoneNumber": company_data.get('phoneNumber', ""),
+            "territory": { 
+                "id": company_data['territory_id']
+            },
+            "dateAcquired": company_data.get('dateAcquired', ""),
+            "billingTerms": {
+                "id": company_data.get('billingTerms_id')
+            },
+            "site": {
+                "name": company_data.get('site_name', "")
+            },
+            "market": {
+                "id": company_data.get('market_id')
+            },
+            "types": [ 
+                { "id": company_data.get('type_id') }
+            ]
         }
 
         # Make the API request to create the company
