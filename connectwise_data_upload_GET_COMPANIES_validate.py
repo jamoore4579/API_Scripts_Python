@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accessing API variables
-BASE_URL = os.getenv("BASE_URL")
-AUTH_CODE = os.getenv("AUTH_CODE")
+BASE_URL = os.getenv("BASE_SAND")
+AUTH_CODE = os.getenv("AUTH_SAND")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
