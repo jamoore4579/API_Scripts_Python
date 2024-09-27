@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accessing API variables
-BASE_URL = os.getenv("BASE_URL")
-AUTH_CODE = os.getenv("AUTH_CODE")
+BASE_URL = os.getenv("BASE_SAND")
+AUTH_CODE = os.getenv("AUTH_SAND")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -48,7 +48,7 @@ def post_company_type(connectwise_id, type_id):
         }
         
         # Make the POST request to update the company type
-        url = f"https://psa.endeavorit.com/v4_6_release/apis/3.0/company/companytypeAssociations"
+        url = f"{BASE_URL}/company/companytypeAssociations"
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()  # Raise an exception for HTTP errors
 
@@ -71,5 +71,5 @@ def process_and_post_companies(csv_file_path):
             post_company_type(connectwise_id, type_id)
 
 # Call the function to process and post companies
-csv_file_path = r'c:\users\jmoore\documents\connectwise\projects\Customer_Type.csv'
+csv_file_path = r'c:\users\jmoore\documents\connectwise\projects\Customer_Type_GigTel_Sandbox.csv'
 process_and_post_companies(csv_file_path)
