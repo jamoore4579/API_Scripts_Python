@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accessing API variables
-BASE_URL = os.getenv("BASE_URL")
-AUTH_CODE = os.getenv("AUTH_CODE")
+BASE_URL = os.getenv("BASE_SAND")
+AUTH_CODE = os.getenv("AUTH_SAND")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -22,7 +22,7 @@ def get_companies():
         # Parameters for filtering the API response
         params = {
             "pageSize": 1000,
-            "conditions": "(deletedFlag = false)",  # Filter by type id and product ID range
+            "childConditions": "(types/id = 50)",  # Filter by type id and product ID range
             "fields": "id,identifier,name,addressLine1,zip,status,deletedFlag"  # Include specified fields
         }
         
@@ -87,7 +87,7 @@ def upload_company_data():
 
     # If data exists, write to CSV
     if companies_df is not None:
-        results_file_path = r'c:\users\jmoore\documents\connectwise\projects\company_data.csv'
+        results_file_path = r'c:\users\jmoore\documents\connectwise\integration\contact_data.csv'
         write_companies_to_csv(companies_df, results_file_path)
     else:
         print("No data to write to CSV.")

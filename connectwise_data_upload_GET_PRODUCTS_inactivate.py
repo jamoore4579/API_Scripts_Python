@@ -17,73 +17,104 @@ headers = {
     "Authorization": "Basic " + AUTH_CODE
 }
 
-def get_products():
+def get_product_by_identifier(product_name):
+    """
+    Get product data from the API based on a single product identifier.
+    """
     try:
-        # Parameters for filtering the API response
+        # Define the URL for the specific API request
+        request_url = f"{BASE_URL}/procurement/catalog"
+        
+        # Define the condition for filtering by a single product name
         params = {
-            "pageSize": 1000,
-            "conditions": "type/id=34 AND (inactiveFlag = false) AND (id>=11089 AND id<=12010)",  # Filter by type id and product ID range
+            "conditions": f"(identifier like \"{product_name}%\")",  # Filter by identifier starting with the product_name
             "fields": "id,identifier,inactiveFlag,type,category/name,subcategory/name"  # Include specified fields
         }
-        
+
         # Make the API request
-        response = requests.get(url=f"{BASE_URL}/procurement/catalog", headers=headers, params=params)
+        response = requests.get(url=request_url, headers=headers, params=params)
         response.raise_for_status()  # Raise exception for HTTP errors
 
-        # Check if the response is a list or dictionary
+        # Parse the response data
         response_data = response.json()
         if isinstance(response_data, list):
-            # If the response is a list, treat it as the product data
             products_data = response_data
         elif isinstance(response_data, dict):
-            # If it's a dictionary, get the "items" key if available
             products_data = response_data.get("items", [])
         else:
-            # Handle unexpected response format
-            print("Unexpected response format.")
             return None
 
-        # Check if product data is available
-        if not products_data:
-            print("No product data found.")
+        return products_data
+
+    except requests.exceptions.RequestException:
+        return None
+
+def upload_product_data(file_path):
+    """
+    Upload product data from the specified CSV file.
+    """
+    try:
+        # Read data from the provided CSV file path
+        data = pd.read_csv(file_path)
+
+        # Check if 'product_name' column exists in the CSV file
+        if 'product_name' not in data.columns:
             return None
 
-        # Load product data into a DataFrame
-        results_df = pd.DataFrame(products_data)
-        
-        # Order columns as specified
-        column_order = ["id", "identifier", "inactiveFlag", "type", "category", "subcategory"]
+        # Extract the 'product_name' column data
+        product_names = data['product_name'].tolist()
+        return product_names
+    except Exception:
+        return None
+
+def get_combined_product_data(product_names):
+    """
+    Retrieve product data for each product name individually and combine them.
+    """
+    all_products = []
+
+    # Iterate through each product name and retrieve data
+    for product_name in product_names:
+        product_data = get_product_by_identifier(product_name)
+        if product_data:
+            all_products.extend(product_data)  # Append product data to the combined list
+
+    # If any product data was found, load it into a DataFrame
+    if all_products:
+        results_df = pd.DataFrame(all_products)
+
+        # Add the product_name column by copying the identifier values
+        results_df['product_name'] = results_df['identifier']
+
+        # Reorder columns to include product_name
+        column_order = ["id", "identifier", "product_name", "inactiveFlag", "type", "category", "subcategory"]
         results_df = results_df.reindex(columns=column_order)
-        
-        return results_df
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching products from API: {e}")
+        return results_df
+    else:
         return None
 
 def write_products_to_csv(dataframe, file_path):
+    """
+    Write the combined product data to a CSV file.
+    """
     try:
-        # Check if the file already exists
-        if os.path.isfile(file_path):
-            # Append to the CSV file without writing the header
-            dataframe.to_csv(file_path, mode='a', header=False, index=False)
-        else:
-            # Write to a new CSV file with the header
-            dataframe.to_csv(file_path, mode='w', header=True, index=False)
-        print(f"Product data written to '{file_path}'.")
+        # Write to a new CSV file with the header
+        dataframe.to_csv(file_path, mode='w', header=True, index=False)
     except Exception as e:
         print(f"Error writing to file: {e}")
 
-def upload_product_data():
-    # Get product data from API
-    products_df = get_products()
+def main():
+    # Read product names from an existing CSV file
+    inactivate_file_path = r'c:\users\jmoore\documents\connectwise\integration\inactivate_product.csv'
+    product_names = upload_product_data(inactivate_file_path)
 
-    # If data exists, write to CSV
-    if products_df is not None:
-        results_file_path = r'c:\users\jmoore\documents\connectwise\projects\product_data.csv'
-        write_products_to_csv(products_df, results_file_path)
-    else:
-        print("No data to write to CSV.")
+    # Get product data from API for each identifier separately and save to CSV
+    if product_names:
+        combined_products_df = get_combined_product_data(product_names)
+        if combined_products_df is not None:
+            results_file_path = r'c:\users\jmoore\documents\connectwise\integration\product_data.csv'
+            write_products_to_csv(combined_products_df, results_file_path)
 
-# Call the function to load and upload product data
-upload_product_data()
+# Call the main function to execute the script
+main()

@@ -44,8 +44,8 @@ def get_company_details_by_id(company_id):
 # Function to get contacts of a company from Connectwise API based on company ID using the base URL
 def get_company_contacts(company_id):
     try:
-        # Define the fields to be retrieved for contacts, including `id`
-        fields = "id,firstName,lastName,defaultPhoneNbr"
+        # Define the fields to be retrieved for contacts, including `emailAddress`
+        fields = "id,firstName,lastName,defaultPhoneNbr,emailAddress"
 
         # Use the BASE_URL variable and build the contacts API endpoint
         contacts_url = f"{BASE_URL}/company/contacts"
@@ -101,7 +101,7 @@ def match_companies_by_id(customers_df):
 
         # Skip if Company_ID is missing or empty
         if not company_id or pd.isnull(company_id):
-            matches.append((company_id, "No ID Provided", "No Match Found", None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
+            matches.append((company_id, "No ID Provided", "No Match Found", None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
             continue
 
         # Fetch company details by ID from the API
@@ -134,12 +134,13 @@ def match_companies_by_id(customers_df):
                     first_name = contact.get('firstName', None)
                     last_name = contact.get('lastName', None)
                     default_phone = format_phone_number(contact.get('defaultPhoneNbr', None))  # Format the contact's phone number
+                    email_address = contact.get('emailAddress', None)  # Extract email address
 
                     # Append all the fields along with contact details to the match list
                     matches.append((
                         company_id, identifier, name, status_name, address_line1, city, state, zip_code,
                         country_name, phone_number, website, territory_name, market_name, date_acquired,
-                        billing_terms_name, contact_id, first_name, last_name, default_phone
+                        billing_terms_name, contact_id, first_name, last_name, default_phone, email_address
                     ))
             else:
                 # If no contacts are found, log and add a single entry with no contact details
@@ -147,18 +148,18 @@ def match_companies_by_id(customers_df):
                 matches.append((
                     company_id, identifier, name, status_name, address_line1, city, state, zip_code,
                     country_name, phone_number, website, territory_name, market_name, date_acquired,
-                    billing_terms_name, None, None, None, None
+                    billing_terms_name, None, None, None, None, None
                 ))
         else:
             # If no company details found, log and add a single entry with no match found
             print(f"No match found for Company ID: {company_id}")
-            matches.append((company_id, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
+            matches.append((company_id, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
 
     # Convert matches to a DataFrame with the required columns
     matched_df = pd.DataFrame(matches, columns=[
         'Company ID', 'Identifier', 'Name', 'Status', 'Address Line1', 'City', 'State', 'Zip', 'Country',
         'Phone Number', 'Website', 'Territory', 'Market', 'Date Acquired', 'Billing Terms',
-        'Contact ID', 'Contact First Name', 'Contact Last Name', 'Contact Phone Number'
+        'Contact ID', 'Contact First Name', 'Contact Last Name', 'Contact Phone Number', 'Contact Email Address'
     ])
     return matched_df
 
