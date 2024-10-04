@@ -22,44 +22,47 @@ def get_companies():
         # Parameters for filtering the API response
         params = {
             "pageSize": 1000,
-            "childConditions": "(types/id = 50)",  # Filter by type id and product ID range
-            "fields": "id,identifier,name,addressLine1,zip,status,deletedFlag"  # Include specified fields
+            "childConditions": "(types/id = 50) ",
+            "conditions": "(deletedFlag = false)",
+            "fields": "id,identifier,name,types,name,status,deletedFlag"  # Include specified fields
         }
         
         # Make the API request
         response = requests.get(url=f"{BASE_URL}/company/companies", headers=headers, params=params)
         response.raise_for_status()  # Raise exception for HTTP errors
 
-        # Check if the response is a list or dictionary
+        # Parse the JSON response data
         response_data = response.json()
         if isinstance(response_data, list):
-            # If the response is a list, treat it as the product data
             company_data = response_data
         else:
-            # Handle unexpected response format
             print("Unexpected response format.")
             return None
-        
-        # Normalize the nested 'status' field to extract 'status.name'
+
+        # Normalize the nested 'status' and 'types' fields to extract required data
         for company in company_data:
+            # Extract 'status_name' from 'status' field
             if isinstance(company.get('status'), dict):
                 company['status_name'] = company['status'].get('name', 'Unknown')
             else:
                 company['status_name'] = 'Unknown'
             
-            # Add addressLine1 to the company data
-            company['address'] = company.get('addressLine1', 'No Address Provided')
+            # Extract 'types_name' as a comma-separated string of all 'types' names
+            if isinstance(company.get('types'), list):
+                company['types_name'] = ', '.join([type_item['name'] for type_item in company['types'] if 'name' in type_item])
+            else:
+                company['types_name'] = 'Unknown'
 
-        # Check if product data is available
+        # Check if company data is available
         if not company_data:
             print("No company data found.")
             return None
 
-        # Load product data into a DataFrame
+        # Load company data into a DataFrame
         results_df = pd.DataFrame(company_data)
         
         # Order columns as specified
-        column_order = ["id","identifier","name","address","zip","status_name","deletedFlag"]
+        column_order = ["id", "identifier", "name", "types_name", "status_name", "deletedFlag"]
         results_df = results_df.reindex(columns=column_order)
         
         return results_df
@@ -87,7 +90,7 @@ def upload_company_data():
 
     # If data exists, write to CSV
     if companies_df is not None:
-        results_file_path = r'c:\users\jmoore\documents\connectwise\integration\contact_data.csv'
+        results_file_path = r'c:\users\jmoore\documents\connectwise\integration\company_data.csv'
         write_companies_to_csv(companies_df, results_file_path)
     else:
         print("No data to write to CSV.")
