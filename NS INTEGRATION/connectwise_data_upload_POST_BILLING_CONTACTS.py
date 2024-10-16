@@ -19,22 +19,11 @@ headers = {
 }
 
 # Load the CSV file paths
-input_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\New_Contacts_101424.csv"
-output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Contact_Update_101424.csv"
+input_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Contact_Upload_101224.csv"
+output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\All_Billing_Contact_Update.csv"
 
-# List of required columns
-required_columns = ['CW_ID', 'firstName', 'lastName', 'Email', 'Phone']
-
-# Read CSV with necessary columns, ignoring missing ones
-try:
-    df = pd.read_csv(input_file_path, usecols=required_columns)
-except ValueError as e:
-    print(f"Warning: {e}")
-    # Load only available columns
-    df = pd.read_csv(input_file_path)
-    missing_cols = set(required_columns) - set(df.columns)
-    for col in missing_cols:
-        df[col] = None  # Add missing columns with None values
+# Read CSV with necessary columns
+df = pd.read_csv(input_file_path, usecols=['CW_ID', 'NS_ID', 'firstName', 'lastName', 'Email', 'Phone'])
 
 # Function to create a contact using ConnectWise API
 def create_contact(contact):
@@ -69,14 +58,26 @@ def create_contact(contact):
         print(f"Failed to create contact for {contact['firstName']}: {response.text}")
         return None
 
-# Loop through contacts and create them
+# Function to update a contact as a billing contact using PATCH API
+def update_billing_contact(company_id, contact_id):
+    url = f"{BASE_URL}/company/companies/{company_id}"
+    data = [{"op": "replace", "path": "/billingContact", "value": {"id": contact_id}}]
+    response = requests.patch(url, json=data, headers=headers)
+    if response.status_code == 200:
+        print(f"Successfully updated billing contact for company ID {company_id}")
+    else:
+        print(f"Failed to update billing contact for company ID {company_id}: {response.text}")
+
+# Loop through contacts, create them, and update as billing contacts
 results = []
 
 for _, row in df.iterrows():
     contact_id = create_contact(row)
     if contact_id:
+        update_billing_contact(row['CW_ID'], contact_id)
         results.append({
             'CW_ID': row['CW_ID'],
+            'NS_ID': row['NS_ID'],
             'firstName': row['firstName'],
             'lastName': row['lastName'] if pd.notna(row['lastName']) else '',
             'Email': row['Email'],

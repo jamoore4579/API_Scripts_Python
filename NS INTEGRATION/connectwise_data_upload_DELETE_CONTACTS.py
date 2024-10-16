@@ -19,7 +19,7 @@ headers = {
 }
 
 # Load the CSV file containing contact IDs
-file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\delete_duplicate.csv"
+file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Delete_Contacts.csv"
 data = pd.read_csv(file_path)
 
 # Initialize list to keep track of deletion results
@@ -27,7 +27,7 @@ results = []
 
 # Iterate through each row in the dataframe and delete contacts using the ConnectWise API
 for index, row in data.iterrows():
-    contact_id = row['CID']
+    contact_id = row['conID']
     delete_url = f"{BASE_URL}/company/contacts/{contact_id}"
 
     # Make the DELETE request
@@ -35,7 +35,7 @@ for index, row in data.iterrows():
 
     # Record the result
     result = {
-        "CID": contact_id,
+        "conID": contact_id,
         "Status Code": response.status_code,
         "Response": response.text
     }
