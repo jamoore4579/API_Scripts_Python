@@ -19,11 +19,11 @@ headers = {
 }
 
 # Load the CSV file paths
-input_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\New_Contacts_101424.csv"
-output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Contact_Update_101424.csv"
+input_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\New_Contacts_Opps.csv"
+output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Contact_Update_102324.csv"
 
 # List of required columns
-required_columns = ['CW_ID', 'firstName', 'lastName', 'Email', 'Phone']
+required_columns = ['CW_ID', 'FirstName', 'LastName', 'Email', 'Phone']
 
 # Read CSV with necessary columns, ignoring missing ones
 try:
@@ -36,27 +36,44 @@ except ValueError as e:
     for col in missing_cols:
         df[col] = None  # Add missing columns with None values
 
+# Replace NaN with None for JSON compatibility
+df = df.where(pd.notna(df), None)
+
 # Function to create a contact using ConnectWise API
 def create_contact(contact):
     url = f"{BASE_URL}/company/contacts"
 
     # Prepare the request data, conditionally adding fields
     data = {
-        "firstName": contact['firstName'],
+        "firstName": contact['FirstName'],
         "company": {"id": contact['CW_ID']}
     }
 
-    # Add last name if it is not empty or NaN
-    if pd.notna(contact['lastName']) and contact['lastName'].strip():
-        data["lastName"] = contact['lastName']
+    # Add last name if it is not empty or None
+    if contact['LastName']:
+        data["LastName"] = contact['LastName']
 
-    # Prepare communication items, adding phone if present
-    communication_items = [
-        {"type": {"id": 1, "name": "Email"}, "value": contact['Email'], "communicationType": "Email"}
-    ]
-    if pd.notna(contact['Phone']) and contact['Phone'].strip():
+    # Prepare communication items with the specified JSON structure
+    communication_items = []
+
+    # Add phone item
+    if contact['Phone']:
         communication_items.append(
-            {"type": {"id": 2, "name": "Direct"}, "value": contact['Phone'], "communicationType": "Phone"}
+            {
+                "type": {"id": 2, "name": "Direct"},
+                "value": contact['Phone'],
+                "communicationType": "Phone"
+            }
+        )
+
+    # Add email item
+    if contact['Email']:
+        communication_items.append(
+            {
+                "type": {"id": 1, "name": "Email"},
+                "value": contact['Email'],
+                "communicationType": "Email"
+            }
         )
 
     data["communicationItems"] = communication_items
@@ -66,7 +83,7 @@ def create_contact(contact):
     if response.status_code == 201:
         return response.json().get('id')  # Return the created contact ID
     else:
-        print(f"Failed to create contact for {contact['firstName']}: {response.text}")
+        print(f"Failed to create contact for {contact['FirstName']}: {response.text}")
         return None
 
 # Loop through contacts and create them
@@ -77,10 +94,10 @@ for _, row in df.iterrows():
     if contact_id:
         results.append({
             'CW_ID': row['CW_ID'],
-            'firstName': row['firstName'],
-            'lastName': row['lastName'] if pd.notna(row['lastName']) else '',
+            'firstName': row['FirstName'],
+            'lastName': row['LastName'] if row['LastName'] else '',
             'Email': row['Email'],
-            'Phone': row['Phone'] if pd.notna(row['Phone']) else '',
+            'Phone': row['Phone'] if row['Phone'] else '',
             'ContactID': contact_id
         })
 

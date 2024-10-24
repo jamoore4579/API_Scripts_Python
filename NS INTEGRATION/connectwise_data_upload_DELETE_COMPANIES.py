@@ -18,8 +18,8 @@ headers = {
 }
 
 # Define file paths
-DELETE_FILE_PATH = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\delete_company_data.csv'
-RESULTS_FILE_PATH = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\delete_company_data_results.csv'
+DELETE_FILE_PATH = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\delete_companies.csv'
+RESULTS_FILE_PATH = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\delete_company_data_results.csv'
 
 def read_company_ids(file_path):
     """

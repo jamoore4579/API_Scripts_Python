@@ -27,9 +27,9 @@ def get_companies():
             params = {
                 "childConditions": "(types/id = 50)",
                 "conditions": "(deletedFlag = false)",
-                "fields": ("id,identifier,name,status,addressLine1,city,state,zip,phoneNumber,faxNumber,"
-                           "website,territory,market,accountNumber,defaultContact,taxCode,billingTerms,"
-                           "billToCompany,billingSite,billingContact,types,customFields"),
+                "fields": ("id,identifier,name,status,addressLine1,city,state,zip,phoneNumber,"
+                           "territory,market,accountNumber,defaultContact,taxCode,billToCompany,"
+                           "billingSite,billingContact,types,customFields"),
                 "page": page  # Current page number
             }
 
@@ -50,7 +50,6 @@ def get_companies():
                 company['market_name'] = company.get('market', {}).get('name', 'Unknown')
                 company['default_contact_name'] = company.get('defaultContact', {}).get('name', 'Unknown')
                 company['tax_code_name'] = company.get('taxCode', {}).get('name', 'Unknown')
-                company['billing_terms_name'] = company.get('billingTerms', {}).get('name', 'Unknown')
                 company['bill_to_company_name'] = company.get('billToCompany', {}).get('name', 'Unknown')
                 company['billing_site_name'] = company.get('billingSite', {}).get('name', 'Unknown')
                 company['billing_contact_name'] = company.get('billingContact', {}).get('name', 'Unknown')
@@ -58,16 +57,15 @@ def get_companies():
                 # Extract type names as comma-separated string
                 company['types_name'] = ', '.join([t['name'] for t in company.get('types', []) if 'name' in t])
 
-                # Extract specific custom fields
+                # Extract specific custom fields (Netsuite ID and Tenant Domain)
                 if 'customFields' in company and isinstance(company['customFields'], list):
                     for field in company['customFields']:
                         caption = field.get('caption')
                         value = field.get('value')
-                        if caption in [
-                            "Hot Prospect", "Customer Team Site", "Primary Channel Partner",
-                            "Secondary Channel Partner", "vCIO?", "Netsuite ID", "Tenant Domain"
-                        ]:
-                            company[caption] = value
+                        if caption == "Netsuite ID":
+                            company['Netsuite ID'] = value
+                        if caption == "Tenant Domain":
+                            company['Tenant Domain'] = value
 
             # Append retrieved companies to the master list
             all_companies.extend(response_data)
@@ -79,11 +77,9 @@ def get_companies():
         # Specify desired column order
         column_order = [
             "id", "identifier", "name", "status_name", "addressLine1", "city", "state", "zip",
-            "phoneNumber", "faxNumber", "website", "territory_name", "market_name", "accountNumber",
-            "default_contact_name", "tax_code_name", "billing_terms_name", "bill_to_company_name",
-            "billing_site_name", "billing_contact_name", "types_name", "deletedFlag",
-            "Hot Prospect", "Customer Team Site", "Primary Channel Partner",
-            "Secondary Channel Partner", "vCIO?", "Netsuite ID", "Tenant Domain"
+            "phoneNumber", "territory_name", "market_name", "accountNumber", "default_contact_name",
+            "tax_code_name", "bill_to_company_name", "billing_site_name", "billing_contact_name",
+            "types_name", "deletedFlag", "Netsuite ID", "Tenant Domain"
         ]
 
         # Reindex DataFrame to ensure column order
@@ -107,7 +103,7 @@ def upload_company_data():
     companies_df = get_companies()
     if companies_df is not None:
         results_file_path = (
-            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Company_Data_101424.csv'
+            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Company_Data_102424.csv'
         )
         write_companies_to_csv(companies_df, results_file_path)
     else:
