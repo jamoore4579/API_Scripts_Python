@@ -20,14 +20,14 @@ headers = {
 }
 
 # Load the CSV file containing contact data
-csv_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_OPPS_Uploaded_102424.csv"
-output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Output_Results.csv"
+csv_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\SFDC_opps_for_Connectwise_SB_102724.csv"
+output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Output_Results_102724.csv"
 
 # Specify the columns to read from the CSV file, including the new 'Amount' column
 columns_to_read = [
-    'OpportunityName', 'AccountName', 'CompanyID', 'Description', 'Stage', 'Type', 'PreferredDeliveryMethod-Rep',
-    'HowManycopiestohanddeliver', 'CloseDate', 'SalePotential', 'Forecast Notes', '470Number', 'DealRegistrationNeeded', 
-    'InvoiceByDate', 'LeadSource', 'SalesEngineer', 'SalesforceID', 'NetSuiteID', 'Amount'
+    'OpportunityName', 'AccountName', 'CompanyID', 'Description', 'BDE', 'Stage', 'PreferredDeliveryMethod-Rep', 'Type',
+    'HowManycopiestohanddeliver', 'CloseDate', 'SalePotential', 'ForecastNotes', '470Number', 'DealRegistrationNeeded', 
+    'InvoiceByDate', 'LeadSource', 'QuotedBy','SalesEngineer', 'NetSuiteID', 'Amount', 'OpportunityID', 'BilledEntityNumber'
 ]
 
 # Load the CSV file, loading only the specified columns if they exist
@@ -145,6 +145,8 @@ def map_sale_potential_to_probability(sale_potential):
         return 3
     elif sale_potential == 'high':
         return 5
+    elif sale_potential == 'signed':
+        return 9
     else:
         return 1  # If blank or any other value
 
@@ -207,7 +209,7 @@ for index, row in contacts_df.iterrows():
     deal_reg_needed = True if row['DealRegistrationNeeded'].lower() == 'yes' else False
 
     # Construct the Sales Force URL using SalesforceID
-    salesforce_url = f"https://endeavorcommunications--conectwise.sandbox.lightning.force.com/lightning/r/Opportunity/{row['SalesforceID']}/view"
+    salesforce_url = f"https://endeavorcommunications--conectwise.sandbox.lightning.force.com/lightning/r/Opportunity/{row['OpportunityID']}/view"
 
     # Set multiple custom fields including Opportunity Category, Sales Engineer, Quoted By, Territory, SF Opportunity ID, Sales Force, Netsuite ID, Invoice by Date, Forecast Notes, and Amount
     custom_fields = [
@@ -242,7 +244,7 @@ for index, row in contacts_df.iterrows():
             "entryMethod": "EntryField",
             "numberOfDecimals": 0,
             "connectWiseId": "a15c74a5-2ce6-ee11-a9f2-0050569d45c9",
-            "value": row['SalesforceID']  # Use SalesforceID from the CSV
+            "value": row['OpportunityID']
         },
         {
             "id": 21,
@@ -278,7 +280,7 @@ for index, row in contacts_df.iterrows():
             "entryMethod": "EntryField",
             "numberOfDecimals": 0,
             "connectWiseId": "fde9ced2-f16e-ee11-a9e8-0050569d45c9",
-            "value": row['Forecast Notes']  # Use Forecast Notes from the CSV
+            "value": row['ForecastNotes']  # Use Forecast Notes from the CSV
         },
         {
             "id": 86,
@@ -297,6 +299,24 @@ for index, row in contacts_df.iterrows():
             "numberOfDecimals": 0,
             "connectWiseId": "c6e4015f-30f0-ee11-a9f5-0050569d45c9",
             "value": deal_reg_needed  # Set based on 'DealRegistrationNeeded' column
+        },
+        {
+            "id": 51,
+            "caption": "BDE",
+            "type": "Text",
+            "entryMethod": "List",
+            "numberOfDecimals": 0,
+            "connectWiseId": "cf7050a4-baf5-ee11-a9f5-0050569d45c9",
+            "value": row['BDE']
+        },
+        {
+            "id": 80,
+            "caption": "Billed Entity Number",
+            "type": "Text",
+            "entryMethod": "EntryField",
+            "numberOfDecimals": 0,
+            "connectWiseId": "6a39af53-bd8b-ef11-bb29-0050568ec25d",
+            "value": row['BilledEntityNumber']
         }
     ]
 
@@ -369,7 +389,10 @@ for index, row in contacts_df.iterrows():
 # Convert the results into a DataFrame
 results_df = pd.DataFrame(results)
 
-# Write the results to an output CSV file
-results_df.to_csv(output_file_path, index=False)
+# Check if output file already exists and append to it if so
+if os.path.exists(output_file_path):
+    results_df.to_csv(output_file_path, mode='a', index=False, header=False)  # Append without headers
+else:
+    results_df.to_csv(output_file_path, index=False)  # Write with headers for new file
 
 print(f"Results have been saved to {output_file_path}")

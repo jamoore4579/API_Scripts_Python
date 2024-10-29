@@ -22,7 +22,7 @@ headers = {
 url = f"{BASE_URL}/sales/opportunities"
 params = {
     "customFieldConditions": 'caption="Netsuite ID" AND value != null',
-    "conditions": 'id >= 21195 AND id <= 28000',  # Added ID range condition
+    "conditions": 'id >= 18000 AND id <= 28000',  # Added ID range condition
     "pageSize": 1000  # Maximum allowed size
 }
 
@@ -82,7 +82,7 @@ while more_pages:
 df = pd.DataFrame(all_data)
 
 # Output the DataFrame to a CSV file (append mode)
-output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_OPP_output_results.csv'
+output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\CW_OPP_output_results_102724.csv'
 
 # Append the data to the CSV file
 df.to_csv(output_file, mode='a', index=False, header=not os.path.exists(output_file))
