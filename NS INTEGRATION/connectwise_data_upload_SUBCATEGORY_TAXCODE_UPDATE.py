@@ -30,20 +30,21 @@ output_data = []
 
 # Loop through each row in the DataFrame to perform the PATCH request
 for index, row in df.iterrows():
-    work_type_id = row['id']
+    subcategory_id = row['id']
     name = row['name']
+    taxcode = row['integrationXref']
 
     # Define the PATCH request payload
     payload = [
         {
             "op": "replace",
-            "path": "/integrationXRef",
-            "value": "SI080001"
+            "path": "/integrationXref",
+            "value": taxcode
         }
     ]
 
     # Make the PATCH request
-    url = f"{BASE_URL}/time/workTypes/{work_type_id}"
+    url = f"{BASE_URL}/procurement/subcategories/{subcategory_id}"
     response = requests.patch(url, headers=headers, json=payload)
 
     # Check for successful response
@@ -51,12 +52,12 @@ for index, row in df.iterrows():
         updated_data = response.json()
         integration_xref = updated_data.get("integrationXRef", "SI080001")  # Use default if not present in response
         output_data.append({
-            "id": work_type_id,
+            "id": subcategory_id,
             "name": name,
             "integrationXRef": integration_xref
         })
     else:
-        print(f"Failed to update work type ID {work_type_id}. Status Code: {response.status_code}")
+        print(f"Failed to update Subcategory ID {subcategory_id}. Status Code: {response.status_code}")
 
 # Convert output data to a DataFrame and save it to a new CSV file
 output_df = pd.DataFrame(output_data)

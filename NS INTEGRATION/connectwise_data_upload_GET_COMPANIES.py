@@ -29,7 +29,7 @@ def get_companies():
                 "conditions": "(deletedFlag = false)",
                 "fields": ("id,identifier,name,status,addressLine1,city,state,zip,phoneNumber,"
                            "territory,market,accountNumber,defaultContact,taxCode,billToCompany,"
-                           "billingSite,billingContact,types,customFields"),
+                           "billingSite,billingContact,billingTerms,invoiceToEmailAddress,types,customFields"),
                 "page": page  # Current page number
             }
 
@@ -53,6 +53,8 @@ def get_companies():
                 company['bill_to_company_name'] = company.get('billToCompany', {}).get('name', 'Unknown')
                 company['billing_site_name'] = company.get('billingSite', {}).get('name', 'Unknown')
                 company['billing_contact_name'] = company.get('billingContact', {}).get('name', 'Unknown')
+                company['billing_term_name'] = company.get('billingTerms', {}).get('name', 'Unknown')
+                company['invoice_to_email'] = company.get('invoiceToEmailAddress', 'Unknown')
 
                 # Extract type names as comma-separated string
                 company['types_name'] = ', '.join([t['name'] for t in company.get('types', []) if 'name' in t])
@@ -78,8 +80,8 @@ def get_companies():
         column_order = [
             "id", "identifier", "name", "status_name", "addressLine1", "city", "state", "zip",
             "phoneNumber", "territory_name", "market_name", "accountNumber", "default_contact_name",
-            "tax_code_name", "bill_to_company_name", "billing_site_name", "billing_contact_name",
-            "types_name", "deletedFlag", "Netsuite ID", "Tenant Domain"
+            "tax_code_name", "bill_to_company_name", "billing_site_name", "billing_contact_name", "billing_term_name",
+            "invoice_to_email", "types_name", "deletedFlag", "Netsuite ID", "Tenant Domain"
         ]
 
         # Reindex DataFrame to ensure column order
@@ -103,7 +105,7 @@ def upload_company_data():
     companies_df = get_companies()
     if companies_df is not None:
         results_file_path = (
-            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Company_Data_102424.csv'
+            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_Data_102924.csv'
         )
         write_companies_to_csv(companies_df, results_file_path)
     else:
