@@ -22,7 +22,7 @@ headers = {
 url = f"{BASE_URL}/sales/opportunities"
 params = {
     "customFieldConditions": 'caption="Netsuite ID" AND value != null',
-    "conditions": 'id >= 18000 AND id <= 28000',  # Added ID range condition
+    "conditions": 'id >= 25940 AND id <= 29000',  # Added ID range condition
     "pageSize": 1000  # Maximum allowed size
 }
 
@@ -42,24 +42,28 @@ while more_pages:
             more_pages = False
             break
 
-        # Extract the required fields: id, name, and Netsuite ID
+        # Extract the required fields: id, name, Netsuite ID, and SF Opportunity ID
         for opp in opportunities:
             opp_id = opp.get('id')
             opp_name = opp.get('name')
             netsuite_id = None
+            sf_opportunity_id = None
 
-            # Loop through custom fields to find the "Netsuite ID"
+            # Loop through custom fields to find the "Netsuite ID" and "SF Opportunity ID"
             custom_fields = opp.get('customFields', [])
             for field in custom_fields:
                 if field.get('caption') == 'Netsuite ID' and field.get('value') is not None:
                     netsuite_id = field.get('value')
-                    break
+                elif field.get('caption') == 'SF Opportunity ID' and field.get('value') is not None:
+                    sf_opportunity_id = field.get('value')
 
-            if netsuite_id:  # Only add to the data if Netsuite ID is found
+            # Only add to the data if Netsuite ID is found
+            if netsuite_id:
                 all_data.append({
                     'ID': opp_id,
                     'Name': opp_name,
-                    'Netsuite ID': netsuite_id
+                    'Netsuite ID': netsuite_id,
+                    'SF Opportunity ID': sf_opportunity_id
                 })
 
         # Check if more pages are available (assuming the API includes a paging mechanism)
@@ -82,7 +86,7 @@ while more_pages:
 df = pd.DataFrame(all_data)
 
 # Output the DataFrame to a CSV file (append mode)
-output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\CW_OPP_output_results_102724.csv'
+output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\CW_OPP_output_results_110124.csv'
 
 # Append the data to the CSV file
 df.to_csv(output_file, mode='a', index=False, header=not os.path.exists(output_file))
