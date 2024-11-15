@@ -25,7 +25,7 @@ def get_companies():
         while True:
             # Updated parameters, supporting pagination
             params = {
-                "childConditions": "(types/id = 50)",
+                "childConditions": "(types/id = 50 or types/id = 54)",
                 "conditions": "(deletedFlag = false)",
                 "fields": ("id,identifier,name,status,addressLine1,city,state,zip,phoneNumber,"
                            "territory,market,accountNumber,defaultContact,taxCode,billToCompany,"
@@ -105,7 +105,7 @@ def upload_company_data():
     companies_df = get_companies()
     if companies_df is not None:
         results_file_path = (
-            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_Data_102924.csv'
+            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_Data_111224.csv'
         )
         write_companies_to_csv(companies_df, results_file_path)
     else:

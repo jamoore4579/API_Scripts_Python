@@ -20,14 +20,15 @@ headers = {
 }
 
 # Load the CSV file containing contact data
-csv_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\SFDC_opps_for_Connectwise_SB_102724.csv"
-output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Output_Results_102724.csv"
+csv_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\All_Opportunities_111324.csv"
+output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\All_Opportunities_111324_Results.csv"
 
 # Specify the columns to read from the CSV file, including the new 'Amount' column
 columns_to_read = [
-    'OpportunityName', 'AccountName', 'CompanyID', 'Description', 'BDE', 'Stage', 'PreferredDeliveryMethod-Rep', 'Type',
-    'HowManycopiestohanddeliver', 'CloseDate', 'SalePotential', 'ForecastNotes', '470Number', 'DealRegistrationNeeded', 
-    'InvoiceByDate', 'LeadSource', 'QuotedBy','SalesEngineer', 'NetSuiteID', 'Amount', 'OpportunityID', 'BilledEntityNumber'
+    'OpportunityName', 'CompanyID', 'Description', 'BDE', 'Stage', 'PreferredDeliveryMethod-Rep', 'Type',
+    'HowManycopiestohanddeliver', 'CloseDate', 'SalePotential', 'ForecastNotes', '470Number', 'DealRegistrationNeeded',
+    'InvoiceByDate', 'LeadSource', 'QuotedBy', 'SalesEngineer', 'NetSuiteID', 'Amount', 'OpportunityID',
+    'BilledEntityNumber', 'OpportunityPriority'
 ]
 
 # Load the CSV file, loading only the specified columns if they exist
@@ -61,7 +62,7 @@ def fetch_metadata(endpoint):
 # Function to fetch company data by CompanyID
 def fetch_company_data(company_id):
     if not company_id:  # Handle missing or empty CompanyID
-        print(f"CompanyID is missing or empty.")
+        print("CompanyID is missing or empty.")
         return None
 
     company_api_url = f"{BASE_URL}/company/companies/{company_id}"
@@ -123,10 +124,6 @@ def get_field_mappings():
 
     return type_dict, stage_dict
 
-# Get the type, stage, and status mappings
-type_dict, stage_dict = get_field_mappings()
-status_dict = fetch_status_mappings()  # Fetch opportunity status mappings
-
 # Function to convert a date to ISO 8601 format
 def format_date(date_str):
     if pd.isna(date_str) or date_str == '':
@@ -160,12 +157,15 @@ def map_stage_to_status(stage, status_dict):
     else:
         return status_dict.get("Open")
 
+# Get the type, stage, and status mappings
+type_dict, stage_dict = get_field_mappings()
+status_dict = fetch_status_mappings()  # Fetch opportunity status mappings
+
 # List to store results
 results = []
 
 # Iterate over each row in the DataFrame
 for index, row in contacts_df.iterrows():
-
     # Format the dates or leave them out if blank
     close_date = format_date(row['CloseDate'])
     invoice_by_date = format_date(row['InvoiceByDate'])
@@ -208,135 +208,49 @@ for index, row in contacts_df.iterrows():
     # Convert DealRegistrationNeeded to boolean: True if "yes", False if "no" or blank
     deal_reg_needed = True if row['DealRegistrationNeeded'].lower() == 'yes' else False
 
-    # Construct the Sales Force URL using SalesforceID
+    # Construct the Salesforce URL using OpportunityID
     salesforce_url = f"https://endeavorcommunications--conectwise.sandbox.lightning.force.com/lightning/r/Opportunity/{row['OpportunityID']}/view"
 
-    # Set multiple custom fields including Opportunity Category, Sales Engineer, Quoted By, Territory, SF Opportunity ID, Sales Force, Netsuite ID, Invoice by Date, Forecast Notes, and Amount
+    # Determine the value for "Quoted By" custom field
+    quoted_by_value = row['QuotedBy'] if row['QuotedBy'] else "2024-10-22T00:00:00Z"
+
+    # Set multiple custom fields
     custom_fields = [
-        {
-            "id": 45,
-            "caption": "Opportunity Category",
-            "value": "New"
-        },
-        {
-            "id": 8,
-            "caption": "Sales Engineer",
-            "value": row['SalesEngineer']  # Assuming SalesEngineer is in the CSV
-        },
-        {
-            "id": 25,
-            "caption": "Quoted By",
-            "value": "2024-10-22T00:00:00Z"  # Fixed date for all opps
-        },
-        {
-            "id": 28,
-            "caption": "Territory",
-            "type": "Text",
-            "entryMethod": "List",
-            "numberOfDecimals": 0,
-            "connectWiseId": "630c233f-c3e7-ee11-a9f4-0050569d45c9",
-            "value": territory  # Territory pulled from the company record
-        },
-        {
-            "id": 27,
-            "caption": "SF Opportunity ID",
-            "type": "Text",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "a15c74a5-2ce6-ee11-a9f2-0050569d45c9",
-            "value": row['OpportunityID']
-        },
-        {
-            "id": 21,
-            "caption": "Sales Force",
-            "type": "Hyperlink",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "3da89e29-98c6-ee11-a9ef-0050569d45c9",
-            "value": salesforce_url  # Constructed URL for Salesforce Opportunity
-        },
-        {
-            "id": 70,
-            "caption": "Netsuite ID",
-            "type": "Text",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "9bb97337-e17c-ef11-bb28-0050568ec25d",
-            "value": row['NetSuiteID']  # Use NetSuiteID from the CSV
-        },
-        {
-            "id": 82,
-            "caption": "Invoice by Date",
-            "type": "Text",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "fd55a96f-bd8b-ef11-bb29-0050568ec25d",
-            "value": invoice_by_date  # Use InvoiceByDate from the CSV
-        },
-        {
-            "id": 18,
-            "caption": "Forecast Notes",
-            "type": "TextArea",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "fde9ced2-f16e-ee11-a9e8-0050569d45c9",
-            "value": row['ForecastNotes']  # Use Forecast Notes from the CSV
-        },
-        {
-            "id": 86,
-            "caption": "Project Tot Contract Val",
-            "type": "Text",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "4cf364bc-5491-ef11-bb29-0050568ec25d",
-            "value": str(row['Amount'])  # Use Amount from the CSV, converted to string
-        },
-        {
-            "id": 30,
-            "caption": "Deal Reg Needed",
-            "type": "Checkbox",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "c6e4015f-30f0-ee11-a9f5-0050569d45c9",
-            "value": deal_reg_needed  # Set based on 'DealRegistrationNeeded' column
-        },
-        {
-            "id": 51,
-            "caption": "BDE",
-            "type": "Text",
-            "entryMethod": "List",
-            "numberOfDecimals": 0,
-            "connectWiseId": "cf7050a4-baf5-ee11-a9f5-0050569d45c9",
-            "value": row['BDE']
-        },
-        {
-            "id": 80,
-            "caption": "Billed Entity Number",
-            "type": "Text",
-            "entryMethod": "EntryField",
-            "numberOfDecimals": 0,
-            "connectWiseId": "6a39af53-bd8b-ef11-bb29-0050568ec25d",
-            "value": row['BilledEntityNumber']
-        }
+        {"id": 8, "caption": "Sales Engineer", "value": row['SalesEngineer']},
+        {"id": 18, "caption": "Forecast Notes", "value": row['ForecastNotes']},
+        {"id": 21, "caption": "Sales Force", "value": salesforce_url},
+        {"id": 25, "caption": "Quoted By", "value": quoted_by_value},
+        {"id": 28, "caption": "Territory", "value": territory},
+        {"id": 27, "caption": "SF Opportunity ID", "value": row['OpportunityID']},
+        {"id": 30, "caption": "Deal Reg Needed", "value": deal_reg_needed},
+        {"id": 33, "caption": "Proj Total Contract Amt", "value": str(row['Amount'])},
+        {"id": 45, "caption": "Opportunity Category", "value": row['Type']},
+        {"id": 51, "caption": "BDE", "value": row['BDE']},
+        {"id": 61, "caption": "470 Number", "value": row['470Number']},
+        {"id": 67, "caption": "Billed Entity Number", "value": row['BilledEntityNumber']},
+        {"id": 73, "caption": "Invoice by Date", "value": invoice_by_date},
+        {"id": 75, "caption": "Netsuite ID", "value": row['NetSuiteID']},
+        {"id": 76, "caption": "Number of copies deliver?", "value": row['HowManycopiestohanddeliver']},
+        {"id": 77, "caption": "Opportunity Priority", "value": row['OpportunityPriority']}
     ]
 
-    # Prepare the payload using the structure, dynamically handling fields
+    # Prepare the payload
     payload = {
         "name": row['OpportunityName'],
-        "expectedCloseDate": close_date,  # Set to fixed date 11/1/2024
+        "expectedCloseDate": close_date,
         "type": {"id": type_id},
         "stage": {"id": stage_id},
-        "source": lead_source,  # Use the processed LeadSource, defaulting to 'Other' if blank
+        "source": lead_source,
         "notes": row['Description'],
-        "probability": probability,  # Send the probability object as required by the API
-        "status": {"id": status_id},  # Send the status ID from the status_dict
+        "probability": probability,
+        "status": {"id": status_id},
         "company": {"id": row['CompanyID']},
-        "contact": {"id": contact_id},  # Assign the fetched contact ID
-        "primarySalesRep": {"id": 380},  # Always set to ID 380
+        "contact": {"id": contact_id},
+        "primarySalesRep": {"id": 380},
         "secondarySalesRep": {"id": 358},
-        "businessUnitId": 10,  # Always set to 10
-        "closedDate": close_date,  # Keeping closedDate as requested
-        "customFields": custom_fields  # Properly formatted custom fields
+        "businessUnitId": 10,
+        "closedDate": close_date,
+        "customFields": custom_fields
     }
 
     # Remove keys with None values
@@ -353,17 +267,17 @@ for index, row in contacts_df.iterrows():
             opportunity_id = response_data.get('id')  # Get the ID from the response
             result = {
                 "OpportunityNumber": opportunity_id,  # Save the ID as OpportunityNumber
-                "NetSuiteID": row['NetSuiteID'],  # Include NetSuiteID in the output
-                "CompanyName": company_name,  # Include the company name in the output
-                "CompanyID": row['CompanyID'],  # Include the company ID in the output
-                "ContactName": contact_name,  # Include the contact name in the output
-                "ContactID": contact_id,  # Include the contact ID in the output
+                "NetSuiteID": row['NetSuiteID'],
+                "CompanyName": company_name,
+                "CompanyID": row['CompanyID'],
+                "ContactName": contact_name,
+                "ContactID": contact_id,
                 "Status": "Success",
                 "ErrorMessage": ""
             }
         else:
             result = {
-                "OpportunityNumber": "N/A",  # No opportunity ID on failure
+                "OpportunityNumber": "N/A",
                 "NetSuiteID": row['NetSuiteID'],
                 "CompanyName": company_name,
                 "CompanyID": row['CompanyID'],
@@ -374,7 +288,7 @@ for index, row in contacts_df.iterrows():
             }
     except requests.exceptions.RequestException as e:
         result = {
-            "OpportunityNumber": "N/A",  # No opportunity ID on error
+            "OpportunityNumber": "N/A",
             "NetSuiteID": row['NetSuiteID'],
             "CompanyName": company_name,
             "CompanyID": row['CompanyID'],
