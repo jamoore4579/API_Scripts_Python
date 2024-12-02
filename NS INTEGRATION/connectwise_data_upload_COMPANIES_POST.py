@@ -9,8 +9,8 @@ from datetime import datetime
 load_dotenv()
 
 # Accessing API variables from environment file
-BASE_URL = os.getenv("BASE_SAND")
-AUTH_CODE = os.getenv("AUTH_SAND")
+BASE_URL = os.getenv("BASE_URL")
+AUTH_CODE = os.getenv("AUTH_CODE")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -22,7 +22,7 @@ headers = {
 }
 
 # Load the CSV file
-csv_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\All_Customers_111324.csv"
+csv_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_111824.csv"
 data = pd.read_csv(csv_path)
 
 # Extract the required columns
@@ -139,7 +139,7 @@ for _, row in filtered_data.iterrows():
         "zip": row["zip"],
         "country": { "id": 1 },
         "phoneNumber": row["phone"],  # Changed from phone to phoneNumber
-        "webAddress": row["web_address"],
+        "website": row["web_address"],
         "site": { "name": "Main" },   # Add a default site name
         "customFields": [
             {
@@ -260,6 +260,6 @@ for _, row in filtered_data.iterrows():
 
 # Convert results to a DataFrame and save to CSV
 results_df = pd.DataFrame(results)
-output_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_Data_Results_111324.csv"
+output_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\CW_Company_Data_Results_111824.csv"
 results_df.to_csv(output_path, index=False)
 print(f"Results saved to {output_path}")

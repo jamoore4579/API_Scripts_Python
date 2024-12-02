@@ -34,7 +34,7 @@ if response.status_code == 200:
     work_types = pd.DataFrame(response.json())
     
     # Define the output file path
-    output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\TaxCodes\CW_ExpenseType_TaxCode_Output.csv"
+    output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\TaxCodes\CW_ExpenseType_Output.csv"
     
     # Save data to CSV
     work_types.to_csv(output_file_path, index=False)
