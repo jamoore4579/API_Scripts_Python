@@ -36,15 +36,15 @@ def yes_no_to_bool(value):
         return True if value.lower() == 'yes' else False
     return value
 
-# Sanitize data to replace NaN, inf, -inf with None and convert numpy bools to Python bools
+# Sanitize data to replace NaN, inf, -inf with None and convert numpy types to native Python types
 def sanitize_data(data_dict):
     for key, value in data_dict.items():
         if isinstance(value, dict):
             sanitize_data(value)  # Recursively sanitize nested dictionaries
         elif isinstance(value, (float, np.float64)) and (np.isnan(value) or np.isinf(value)):
             data_dict[key] = None
-        elif isinstance(value, np.bool_):  # Convert numpy.bool_ to Python bool
-            data_dict[key] = bool(value)
+        elif isinstance(value, (np.bool_, np.int64, np.float64)):  # Convert numpy types to Python types
+            data_dict[key] = value.item()  # Convert numpy type to its Python equivalent
     return data_dict
 
 # Sanitize strings to handle unsupported characters
@@ -129,10 +129,12 @@ for idx, chunk in enumerate(chunk_iter):
     row = chunk.iloc[0].fillna("")  # Replace NaN with empty strings for each row
     row['RenewableItem'] = yes_no_to_bool(row['RenewableItem'])
 
-    # Transform Class if necessary
+    # Retain the original value of "Class"
     product_class = row["Class"]
-    if product_class == "Non-Inventory":
-        product_class = "NonInventory"
+
+    # Retrieve the 'Price' and 'notes' values
+    price_value = row["Price"]
+    notes_value = row["notes"]
 
     # Limit the 'customerDescription' to 60 characters or use 'ProductID' if blank
     truncated_description = str(row["customerDescription"])[:60] if row["customerDescription"] else str(row["ProductID"])
@@ -152,10 +154,13 @@ for idx, chunk in enumerate(chunk_iter):
         "subcategory": {"id": subcategory_id},
         "type": {"id": type_id},
         "manufacturer": {"id": manufacturer_id},
+        "vendor": {"id": vendor_id},
         "unitOfMeasure": {"id": uom_id},
         "productClass": product_class,
-        "serializedFlag": row["Serialized"],
+        "serializedFlag": bool(row["Serialized"]),
         "taxableFlag": True,
+        "cost": float(price_value),
+        "notes": notes_value,
         "customFields": [
             {"id": 80, "caption": "Renewable", "value": row["RenewableItem"]},
         ]

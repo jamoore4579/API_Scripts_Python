@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Access API variables
-BASE_URL = os.getenv("BASE_SAND")
-AUTH_CODE = os.getenv("AUTH_SAND")
+BASE_URL = os.getenv("BASE_URL")
+AUTH_CODE = os.getenv("AUTH_CODE")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -120,11 +120,11 @@ def upload_contact_data():
     """
     Main function to fetch contacts and save them to a CSV file.
     """
-    company_file_path = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Company_Data_101424.csv'
+    company_file_path = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Contacts\Company_Contacts_list.csv'
     contacts_df = fetch_contacts_from_company_ids(company_file_path)
 
     if not contacts_df.empty:
-        output_file_path = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Contact_Data_101424.csv'
+        output_file_path = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\CW_Contact_Data_120324.csv'
         write_contacts_to_csv(contacts_df, output_file_path)
     else:
         print("No contact data to write to CSV.")
