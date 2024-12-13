@@ -22,7 +22,7 @@ endpoint = f"{BASE_URL}/system/members"
 
 # Query parameters for initial request
 params = {
-    "fields": "identifier,firstName,lastName,inactiveFlag",  # Request specific fields
+    "fields": "identifier,firstName,lastName,vendorNumber,inactiveFlag",  # Request specific fields
     "conditions": "inactiveFlag=false",  # Filter for active members
     "page": 1,  # Start with the first page
     "pageSize": 100  # Set a reasonable page size
