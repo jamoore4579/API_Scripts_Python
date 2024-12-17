@@ -31,7 +31,7 @@ def fetch_contacts(company_id):
 # Main script logic
 if __name__ == "__main__":
     input_file = r"c:\\users\\jmoore\\documents\\connectwise\\integration\\NS_Integration\\Contacts\\Contact_Company.csv"
-    output_file = r"c:\\users\\jmoore\\documents\\connectwise\\integration\\NS_Integration\\Contacts\\CW_Contact_Data_121124.csv"
+    output_file = r"c:\\users\\jmoore\\documents\\connectwise\\integration\\NS_Integration\\Contacts\\CW_Contact_Data_121324.csv"
 
     all_contact_data = []
 
