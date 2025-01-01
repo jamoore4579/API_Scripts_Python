@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accessing API variables from environment file
-BASE_URL = os.getenv("BASE_SAND")
-AUTH_CODE = os.getenv("AUTH_SAND")
+BASE_URL = os.getenv("BASE_URL")
+AUTH_CODE = os.getenv("AUTH_CODE")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -18,18 +18,17 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Define the URL and initial parameters with additional conditions for ID range
+# Define the initial URL and parameters
 url = f"{BASE_URL}/sales/opportunities"
 params = {
-    "customFieldConditions": 'caption="Netsuite ID" AND value != null',
-    "conditions": 'id >= 25940 AND id <= 29000',  # Added ID range condition
-    "pageSize": 1000  # Maximum allowed size
+    "conditions": 'id >= 19848 AND id <= 20850',  # Modify or remove condition as needed
+    "pageSize": 1000,  # Maximum allowed size
+    "page": 1  # Start with the first page
 }
 
-all_data = []  # To store all opportunities data
-more_pages = True  # Loop control variable
+all_data = []  # To store filtered opportunities data
 
-while more_pages:
+while True:
     # Make the GET request to the API
     response = requests.get(url, headers=headers, params=params)
 
@@ -39,54 +38,27 @@ while more_pages:
 
         # If no opportunities are returned, stop the loop
         if not opportunities:
-            more_pages = False
             break
 
-        # Extract the required fields: id, name, Netsuite ID, and SF Opportunity ID
+        # Filter the data to include only `id` and customField with `id` 75
         for opp in opportunities:
-            opp_id = opp.get('id')
-            opp_name = opp.get('name')
-            netsuite_id = None
-            sf_opportunity_id = None
+            custom_field_75 = next((field["value"] for field in opp.get("customFields", []) if field["id"] == 75), None)
+            all_data.append({
+                "id": opp.get("id"),
+                "customField_75": custom_field_75
+            })
 
-            # Loop through custom fields to find the "Netsuite ID" and "SF Opportunity ID"
-            custom_fields = opp.get('customFields', [])
-            for field in custom_fields:
-                if field.get('caption') == 'Netsuite ID' and field.get('value') is not None:
-                    netsuite_id = field.get('value')
-                elif field.get('caption') == 'SF Opportunity ID' and field.get('value') is not None:
-                    sf_opportunity_id = field.get('value')
-
-            # Only add to the data if Netsuite ID is found
-            if netsuite_id:
-                all_data.append({
-                    'ID': opp_id,
-                    'Name': opp_name,
-                    'Netsuite ID': netsuite_id,
-                    'SF Opportunity ID': sf_opportunity_id
-                })
-
-        # Check if more pages are available (assuming the API includes a paging mechanism)
-        if 'Link' in response.headers:
-            # Look for a "next" page link in the headers
-            link_header = response.headers['Link']
-            if 'rel="next"' in link_header:
-                # Parse the "next" page URL (modify as needed for your API format)
-                next_url = link_header.split(';')[0].strip('<>')
-                url = next_url  # Update the URL for the next request
-            else:
-                more_pages = False  # No more pages
-        else:
-            more_pages = False  # No pagination found
+        # Increment the page number for the next request
+        params["page"] += 1
     else:
         print(f"Failed to retrieve data. Status code: {response.status_code}, Response: {response.text}")
         break
 
-# Convert the data to a DataFrame
+# Convert the filtered data to a DataFrame
 df = pd.DataFrame(all_data)
 
 # Output the DataFrame to a CSV file (append mode)
-output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\CW_OPP_output_results_110124.csv'
+output_file = r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\Production\CW_OPP_output_results_122824.csv'
 
 # Append the data to the CSV file
 df.to_csv(output_file, mode='a', index=False, header=not os.path.exists(output_file))

@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Accessing API variables
-BASE_URL = os.getenv("BASE_SAND")
-AUTH_CODE = os.getenv("AUTH_SAND")
+BASE_URL = os.getenv("BASE_URL")
+AUTH_CODE = os.getenv("AUTH_CODE")
 CLIENT_ID = os.getenv("CLIENT_ID")
 
 # Set up headers for the API request
@@ -19,7 +19,7 @@ headers = {
 }
 
 # Load the CSV file containing contact IDs
-file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\CW_OPP_output_results_102724.csv"
+file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Opportunity\Production\Delete_Opps_122824.csv"
 data = pd.read_csv(file_path)
 
 # Initialize list to keep track of deletion results
@@ -27,7 +27,7 @@ results = []
 
 # Iterate through each row in the dataframe and delete contacts using the ConnectWise API
 for index, row in data.iterrows():
-    opp_id = row['ID']
+    opp_id = row['CWID']
     delete_url = f"{BASE_URL}/sales/opportunities/{opp_id}"
 
     # Make the DELETE request
@@ -46,7 +46,7 @@ for index, row in data.iterrows():
 results_df = pd.DataFrame(results)
 
 # Save the results to a new CSV file
-output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\opportunity_deleted_102724.csv"
+output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\opportunity_deleted_122824.csv"
 results_df.to_csv(output_file_path, index=False)
 
 print(f"Deletion results saved to {output_file_path}")

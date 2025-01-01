@@ -21,13 +21,13 @@ def get_companies():
     try:
         all_companies = []  # Store all retrieved companies
         page = 1  # Start with the first page
-        
+
         while True:
             # Updated parameters, supporting pagination
             params = {
-                "conditions": "(deletedFlag=false AND (status/id=1 OR status/id=21))",
+                "conditions": "(deletedFlag=false AND (status/id=1 OR status/id=21 OR status/id=13))",
                 "childConditions": "(types/id =50)",
-                "fields": "id,name,accountNumber,types,customFields,billingTerms,status",
+                "fields": "id,name,phoneNumber,customFields,status,website,territory/name,market/name,dateAcquired",
                 "page": page  # Current page number
             }
 
@@ -60,6 +60,14 @@ def get_companies():
                 # Extract status name if available
                 company['status_name'] = company.get('status', {}).get('name', None)
 
+                # Normalize new fields: territory name, market, dateAcquired
+                company['territory_name'] = company.get('territory', {}).get('name', None)
+                company['market'] = company.get('market', {}).get('name', None)
+                company['dateAcquired'] = company.get('dateAcquired', None)
+
+                # Normalize website
+                company['website'] = company.get('website', None)
+
             # Append retrieved companies to the master list
             all_companies.extend(response_data)
             page += 1  # Move to the next page
@@ -68,7 +76,11 @@ def get_companies():
         results_df = pd.DataFrame(all_companies)
 
         # Specify desired column order
-        column_order = ["id", "name", "accountNumber", "types_name", "Netsuite ID", "billingTerms_name", "status_name"]
+        column_order = [
+            "id", "name", "types_name", "Netsuite ID", "status_name",
+            "territory_name", "market", "dateAcquired", "phoneNumber", 
+            "website"
+        ]
 
         # Reindex DataFrame to ensure column order
         results_df = results_df.reindex(columns=column_order)
@@ -91,7 +103,7 @@ def upload_company_data():
     companies_df = get_companies()
     if companies_df is not None:
         results_file_path = (
-            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\Production\CW_Company_Data_120224.csv'
+            r'c:\users\jmoore\documents\connectwise\integration\NS_Integration\Company\Production\CW_Company_Data_122824.csv'
         )
         write_companies_to_csv(companies_df, results_file_path)
     else:
