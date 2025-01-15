@@ -19,46 +19,42 @@ headers = {
 
 def get_companies():
     try:
-        # Parameters for filtering the API response
-        params = {
-            "pageSize": 1000,
-            "conditions": "(deletedFlag = false)",
-            "childConditions": "(types/id = 40)",
-            "fields": "id,identifier,name,types"  # Only include specified fields
-        }
+        # Initialize an empty list to store all company data
+        all_companies = []
+        page_number = 1
         
-        # Make the API request with the new URL
-        response = requests.get(url=f"{BASE_URL}/company/companies", headers=headers, params=params)
-        response.raise_for_status()  # Raise exception for HTTP errors
+        while True:
+            # Parameters for filtering the API response
+            params = {
+                "pageSize": 1000,
+                "page": page_number,
+                "conditions": "(deletedFlag = false)"
+            }
+            
+            # Make the API request
+            response = requests.get(url=f"{BASE_URL}/company/companies", headers=headers, params=params)
+            response.raise_for_status()  # Raise exception for HTTP errors
 
-        # Check if the response is a list or dictionary
-        response_data = response.json()
-        if isinstance(response_data, list):
-            # If the response is a list, treat it as the company data
-            company_data = response_data
-        else:
-            # Handle unexpected response format
-            print("Unexpected response format.")
-            return None
-        
-        # Handle the 'types' field if it's a list or dictionary
-        for company in company_data:
-            if isinstance(company.get('types'), list):
-                company['types'] = ','.join([str(t) for t in company['types']])
+            # Parse the response data
+            response_data = response.json()
+            
+            # Check if response data is a list
+            if isinstance(response_data, list) and response_data:
+                all_companies.extend(response_data)  # Add the data to the list
+                page_number += 1  # Move to the next page
             else:
-                company['types'] = 'Unknown'
+                break  # Exit the loop if no more data is available
 
         # Check if company data is available
-        if not company_data:
+        if not all_companies:
             print("No company data found.")
             return None
 
         # Load company data into a DataFrame
-        results_df = pd.DataFrame(company_data)
-        
-        # Order columns as specified
-        column_order = ["id", "identifier", "name", "types"]
-        results_df = results_df.reindex(columns=column_order)
+        results_df = pd.DataFrame(all_companies)
+
+        # Handle missing values by replacing them with "Unknown"
+        results_df.fillna("Unknown", inplace=True)
         
         return results_df
 
@@ -85,7 +81,7 @@ def upload_company_data():
 
     # If data exists, write to CSV
     if companies_df is not None:
-        results_file_path = r'c:\users\jmoore\documents\connectwise\projects\company_types_data.csv'
+        results_file_path = r'c:\users\jmoore\documents\connectwise\Integration\NS_Integration\company_accounting_data.csv'
         write_companies_to_csv(companies_df, results_file_path)
     else:
         print("No data to write to CSV.")
