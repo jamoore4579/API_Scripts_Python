@@ -19,62 +19,60 @@ headers = {
 }
 
 # Path to the CSV file
-csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Integration\\NS_Integration\\Opportunity\\Production\\CW_UPDATE.csv"
+csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Integration\\NS_Integration\\Opportunity\\Production\\UpdateOpportunity.csv"
+output_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Integration\\NS_Integration\\Opportunity\\Production\\UpdateOpportunityOutput.csv"
 
 # Read the CSV file
 data = pd.read_csv(csv_file_path)
 
 # Check if the required columns exist
-if 'CWOpportunityID' not in data.columns or 'OpportunityID' not in data.columns:
-    raise ValueError("The CSV file must contain 'CWOpportunityID' and 'OpportunityID' columns.")
+if 'OPP_ID' not in data.columns or 'BUS_ID' not in data.columns:
+    raise ValueError("The CSV file must contain 'OPP_ID' and 'BUS_ID' columns.")
 
 # Function to process records
 def process_records(records):
     responses = []
     for index, row in records.iterrows():
-        cw_opportunity_id = row['CWOpportunityID']
-        opportunity_id = row['OpportunityID']
+        opp_id = int(row['OPP_ID']) if not pd.isna(row['OPP_ID']) else None
+        bus_id = int(row['BUS_ID']) if not pd.isna(row['BUS_ID']) else None
 
-        # Construct PATCH request data (first JSON)
-        patch_data_1 = [
+        if opp_id is None or bus_id is None:
+            print(f"Skipping record with missing data at index {index}")
+            continue
+
+        # Construct PATCH request data
+        patch_data = [
             {
                 "op": "replace",
-                "path": "/customFields",
-                "value": [
-                    {
-                        "id": 21,
-                        "value": f"https://endeavorcommunications.lightning.force.com/lightning/r/Opportunity/{opportunity_id}/view"
-                    }
-                ]
-            }
-        ]
-
-        # Construct PATCH request data (second JSON)
-        patch_data_2 = [
-            {
-                "op": "replace",
-                "path": "/customFields",
-                "value": [
-                    {
-                        "id": 27,
-                        "value": f"{opportunity_id}"
-                    }
-                ]
+                "path": "/businessUnitId",
+                "value": bus_id
             }
         ]
 
         # Define the API endpoint
-        endpoint = f"{BASE_URL}/sales/opportunities/{cw_opportunity_id}"
+        endpoint = f"{BASE_URL}/sales/opportunities/{opp_id}"
 
-        # Make the first PATCH request
-        response_1 = requests.patch(endpoint, headers=headers, json=patch_data_1)
-        print(f"Processed CWOpportunityID: {cw_opportunity_id} (First PATCH)")
-        responses.append({"CWOpportunityID": cw_opportunity_id, "Response1": response_1.status_code, "Detail1": response_1.text})
+        try:
+            # Make the PATCH request
+            response = requests.patch(endpoint, headers=headers, json=patch_data)
+            
+            # Log the response
+            print(f"Processed OPP_ID: {opp_id}")
+            responses.append({
+                "OPP_ID": opp_id,
+                "BUS_ID": bus_id,
+                "Status": response.status_code,
+                "Response": response.text
+            })
+        except requests.exceptions.RequestException as e:
+            print(f"Error processing OPP_ID: {opp_id}. Error: {e}")
+            responses.append({
+                "OPP_ID": opp_id,
+                "BUS_ID": bus_id,
+                "Status": "Error",
+                "Response": str(e)
+            })
 
-        # Make the second PATCH request
-        response_2 = requests.patch(endpoint, headers=headers, json=patch_data_2)
-        print(f"Processed CWOpportunityID: {cw_opportunity_id} (Second PATCH)")
-        responses.append({"CWOpportunityID": cw_opportunity_id, "Response2": response_2.status_code, "Detail2": response_2.text})
     return responses
 
 # Process the first five records
@@ -82,6 +80,9 @@ first_five = data.head(5)
 responses = process_records(first_five)
 
 # Output responses for the first five records
+output_data = pd.DataFrame(responses)
+output_data.to_csv(output_file_path, index=False)
+
 for resp in responses:
     print(resp)
 
@@ -92,6 +93,9 @@ if proceed == 'yes':
     responses = process_records(remaining_records)
 
     # Output responses for the remaining records
+    output_data = pd.DataFrame(responses)
+    output_data.to_csv(output_file_path, mode='a', index=False, header=False)
+
     for resp in responses:
         print(resp)
 else:

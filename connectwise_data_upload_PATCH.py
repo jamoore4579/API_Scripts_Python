@@ -18,41 +18,43 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Define the JSON payload for the PATCH request
-patch_payload = [
-    {
-        "op": "replace",
-        "path": "/serializedCostFlag",
-        "value": True
-    }
-]
-
 # Define the file path to read the input CSV file
-input_file_path = r"c:\users\jmoore\documents\connectwise\integration\ns_integration\items\production\SerializedProducts.csv"
+input_file_path = r"c:\users\jmoore\documents\connectwise\integration\ns_integration\items\production\UPDATE_COST.csv"
 
-# Load the CSV file and extract the 'id' column
+# Load the CSV file and extract 'ID' and 'COST' columns
 data = pd.read_csv(input_file_path)
-ids = data['id'].tolist()
+ids_and_costs = data[['ID', 'COST']]
 
 # Store results
 results = []
 
 # Process the first five records
-for id_value in ids[:5]:
+for _, row in ids_and_costs.iloc[:5].iterrows():
+    id_value = row['ID']
+    cost_value = row['COST']
     url = f"{BASE_URL}/procurement/catalog/{id_value}"
+    patch_payload = [
+        {
+            "op": "replace",
+            "path": "/cost",
+            "value": cost_value
+        }
+    ]
     try:
         # Send PATCH request
         response = requests.patch(url, headers=headers, json=patch_payload)
         # Append response details to the results list
         results.append({
-            "id": id_value,
+            "ID": id_value,
+            "COST": cost_value,
             "status_code": response.status_code,
             "response_text": response.text
         })
     except requests.exceptions.RequestException as e:
         # Handle exceptions and log the error
         results.append({
-            "id": id_value,
+            "ID": id_value,
+            "COST": cost_value,
             "status_code": "Error",
             "response_text": str(e)
         })
@@ -63,21 +65,32 @@ user_input = input().strip().lower()
 
 if user_input == "yes":
     # Process the remaining records
-    for id_value in ids[5:]:
+    for _, row in ids_and_costs.iloc[5:].iterrows():
+        id_value = row['ID']
+        cost_value = row['COST']
         url = f"{BASE_URL}/procurement/catalog/{id_value}"
+        patch_payload = [
+            {
+                "op": "replace",
+                "path": "/cost",
+                "value": cost_value
+            }
+        ]
         try:
             # Send PATCH request
             response = requests.patch(url, headers=headers, json=patch_payload)
             # Append response details to the results list
             results.append({
-                "id": id_value,
+                "ID": id_value,
+                "COST": cost_value,
                 "status_code": response.status_code,
                 "response_text": response.text
             })
         except requests.exceptions.RequestException as e:
             # Handle exceptions and log the error
             results.append({
-                "id": id_value,
+                "ID": id_value,
+                "COST": cost_value,
                 "status_code": "Error",
                 "response_text": str(e)
             })

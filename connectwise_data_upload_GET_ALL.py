@@ -23,10 +23,11 @@ headers = {
 }
 
 # File path for output
-output_path = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\Items\\Production\\SerializedProductsUpdate.csv"
+output_path = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\Opportunity\\Production\\OpportunitiesUpdate.csv"
 
-# API endpoint
-endpoint = f"{BASE_URL}/procurement/catalog"
+# API endpoints
+opportunities_endpoint = f"{BASE_URL}/sales/opportunities"
+departments_endpoint = f"{BASE_URL}/system/departments"
 
 # Function to fetch all pages of data
 def fetch_all_pages(endpoint, headers, params):
@@ -51,20 +52,42 @@ def fetch_all_pages(endpoint, headers, params):
 
     return all_data
 
-# Fetch all active records
-print("Fetching all active records...")
+# Fetch all active opportunities
+print("Fetching all active opportunities...")
 params = {
-    "conditions": "(inactiveFlag=false) AND (serializedFlag=true) AND (serializedCostFlag=false)",
-    "fields": "id,identifier,serializedFlag,serializedCostFlag",
+    "conditions": "(status/id=1)",
+    "fields": "id,locationId,businessUnitId,stage/name,status/name,primarySalesRep/name",
     "pageSize": 1000
 }
 
-all_results = fetch_all_pages(endpoint, headers, params)
+opportunities = fetch_all_pages(opportunities_endpoint, headers, params)
 
-# Check if any data was retrieved
-if all_results:
+# Fetch all departments
+print("Fetching departments...")
+departments = fetch_all_pages(departments_endpoint, headers, params={})
+
+# Create a mapping of businessUnitId to department name
+department_lookup = {str(dept['id']): dept['name'] for dept in departments}
+
+# Replace businessUnitId with department name in opportunities
+def map_department_name(opportunity):
+    business_unit_id = str(opportunity.get("businessUnitId", ""))
+    opportunity["business_unit_id"] = department_lookup.get(business_unit_id, "Unknown")
+    return {
+        "id": opportunity.get("id"),
+        "locationId": opportunity.get("locationId"),
+        "business_unit_id": opportunity.get("business_unit_id"),
+        "stage/name": opportunity.get("stage", {}).get("name", "Unknown"),
+        "status/name": opportunity.get("status", {}).get("name", "Unknown"),
+        "primarySalesRep/name": opportunity.get("primarySalesRep", {}).get("name", "Unknown")
+    }
+
+if opportunities:
+    print("Mapping department names to opportunities...")
+    mapped_opportunities = [map_department_name(op) for op in opportunities]
+
     # Convert the data to a pandas DataFrame
-    df = pd.DataFrame(all_results)
+    df = pd.DataFrame(mapped_opportunities)
 
     # Save DataFrame to CSV
     try:
@@ -73,4 +96,4 @@ if all_results:
     except Exception as e:
         print(f"Error writing output file: {e}")
 else:
-    print("No data retrieved.")
+    print("No opportunities data retrieved.")

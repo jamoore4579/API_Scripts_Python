@@ -28,7 +28,8 @@ def get_companies():
             params = {
                 "pageSize": 1000,
                 "page": page_number,
-                "conditions": "(deletedFlag = false)"
+                "conditions": "(deletedFlag = false AND status/id != 3)",
+                "fields": "id,name,status/name,customFields"
             }
             
             # Make the API request
@@ -40,7 +41,29 @@ def get_companies():
             
             # Check if response data is a list
             if isinstance(response_data, list) and response_data:
-                all_companies.extend(response_data)  # Add the data to the list
+                for company in response_data:
+                    custom_fields = {}
+                    custom_fields_list = []
+                    if "customFields" in company:
+                        print(f"Debug: customFields data for company ID {company.get('id')}: {company['customFields']}")
+                        if isinstance(company["customFields"], list):
+                            for field in company["customFields"]:
+                                field_id = field.get("id")
+                                field_value = field.get("value")
+                                if field_id is not None:
+                                    custom_fields[f"customField_{field_id}"] = field_value
+                                    custom_fields_list.append(f"{field_id}:{field_value}")
+
+                    # Add the company data with all customFields to the list
+                    company_data = {
+                        "id": company.get("id"),
+                        "name": company.get("name"),
+                        "status": company.get("status", {}).get("name"),
+                        "customFields": "; ".join(custom_fields_list)  # Combine all custom field values into one column
+                    }
+                    company_data.update(custom_fields)
+                    all_companies.append(company_data)
+
                 page_number += 1  # Move to the next page
             else:
                 break  # Exit the loop if no more data is available
@@ -81,7 +104,7 @@ def upload_company_data():
 
     # If data exists, write to CSV
     if companies_df is not None:
-        results_file_path = r'c:\users\jmoore\documents\connectwise\Integration\NS_Integration\company_accounting_data.csv'
+        results_file_path = r'c:\users\jmoore\documents\connectwise\Integration\NS_Integration\company_site_data.csv'
         write_companies_to_csv(companies_df, results_file_path)
     else:
         print("No data to write to CSV.")

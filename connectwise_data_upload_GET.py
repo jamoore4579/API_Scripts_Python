@@ -17,27 +17,14 @@ headers = {
     "Authorization": "Basic " + AUTH_CODE
 }
 
-# File paths
-input_file = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\Items\\Production\\Product_Catalog.csv"
+# File path for output
 output_path = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\Items\\Production\\GenericItemsUpdate.csv"
-
-# Read input CSV file
-try:
-    input_data = pd.read_csv(input_file)
-    if 'Name' not in input_data.columns:
-        raise KeyError("The 'name' column is missing in the input file.")
-except Exception as e:
-    print(f"Error reading input file: {e}")
-    exit()
-
-# Extract 'name' column values
-names = input_data['Name'].dropna().unique()
 
 # API endpoint
 endpoint = f"{BASE_URL}/procurement/catalog"
 
 # Function to fetch all pages of data
-def fetch_all_pages(endpoint, headers, params):
+def fetch_all_products(endpoint, headers, params):
     all_data = []
     page = 1
 
@@ -59,19 +46,15 @@ def fetch_all_pages(endpoint, headers, params):
 
     return all_data
 
-# Fetch data for each name
-all_results = []
-for name in names:
-    print(f"Fetching data for name: {name}")
-    params = {
-        "conditions": f"(identifier like \"{name}\")",
-        "fields": "id,identifier,manufacturer/name",
-        "pageSize": 1000
-    }
+# Parameters for fetching all products
+params = {
+    "fields": "id,identifier,cost",
+    "pageSize": 1000
+}
 
-    results = fetch_all_pages(endpoint, headers, params)
-    if results:
-        all_results.extend(results)
+# Fetch all products
+print("Fetching all products from the catalog...")
+all_results = fetch_all_products(endpoint, headers, params)
 
 # Check if any data was retrieved
 if all_results:

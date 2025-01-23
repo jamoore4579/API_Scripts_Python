@@ -18,18 +18,18 @@ headers = {
 }
 
 # File paths
-input_file_path = r'c:\users\jmoore\documents\connectwise\integration\Keep_Products.csv'
-output_file_path = r'c:\users\jmoore\documents\connectwise\integration\Keep_Products_updated.csv'
+input_file_path = r'c:\users\jmoore\documents\connectwise\integration\ns_integration\items\production\Product_Cost.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\integration\ns_integration\items\production\Product_Cost_Info.csv'
 
 def get_catalog_items_from_csv(file_path):
     try:
-        # Read the CSV file to extract 'catalogItem' column values
+        # Read the CSV file to extract 'PROD_ID' column values
         data = pd.read_csv(file_path)
-        if 'catalogItem' in data.columns:
-            # Return the unique 'catalogItem' values as a list
-            return data['catalogItem'].dropna().unique().tolist()
+        if 'PROD_ID' in data.columns:
+            # Return the unique 'PROD_ID' values as a list
+            return data['PROD_ID'].dropna().unique().tolist()
         else:
-            print(f"Column 'catalogItem' not found in {file_path}.")
+            print(f"Column 'PROD_ID' not found in {file_path}.")
             return []
     except Exception as e:
         print(f"Error reading CSV file: {e}")
@@ -43,7 +43,7 @@ def get_products(catalog_items):
         for item in catalog_items:
             # Parameters for the API request
             params = {
-                "fields": "id,identifier,description",
+                "fields": "id,identifier,cost",
                 "conditions": f"identifier like \"{item}%\""  # Apply condition to filter identifiers based on the catalog item
             }
             
