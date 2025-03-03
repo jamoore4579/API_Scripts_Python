@@ -8,18 +8,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load API credentials and base URL from environment variables
-BASE_URL = os.getenv("SELL_URL")
-AUTH_CODE = os.getenv("AUTH_SSAND")
+SELL_URL = os.getenv("SELL_URL")
+AUTH_ID = os.getenv("AUTH_ID")
 
 
 # Set up headers for the API requests
 headers = {
-    "Authorization": f"Basic {AUTH_CODE}",
+    "Authorization": f"Basic {AUTH_ID}",
     "Content-Type": "application/json"
 }
 
-# Load the CSV file containing contact data
-csv_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\All_Quotes_102124.csv"
+# CSV file containing quote data
 output_file_path = r"c:\users\jmoore\documents\connectwise\integration\NS_Integration\Quotes_Loaded_results.csv"
 
 # Specify the columns to read from the CSV file, including "Connectwise ID" as "company_ID"
@@ -28,11 +27,6 @@ columns_to_read = [
     'City', 'ZipCode', 'State'
 ]
 
-# Read the CSV file, loading only the specified columns
-contacts_df = pd.read_csv(csv_file_path, usecols=columns_to_read)
-
-# Handle missing values by replacing NaNs with empty strings
-contacts_df = contacts_df.fillna('')
 
 # Function to convert a date to ISO 8601 format
 def format_date(date_str):

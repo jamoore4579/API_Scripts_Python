@@ -14,58 +14,71 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 # API headers
 headers = {
     "ClientId": CLIENT_ID,
-    "Authorization": "Basic " + AUTH_CODE
+    "Authorization": f"Basic {AUTH_CODE}",
+    "Content-Type": "application/json"
 }
-
-# File path for output
-output_path = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\Items\\Production\\GenericItemsUpdate.csv"
 
 # API endpoint
-endpoint = f"{BASE_URL}/procurement/catalog"
+endpoint = f"{BASE_URL}/sales/opportunities"
 
-# Function to fetch all pages of data
-def fetch_all_products(endpoint, headers, params):
-    all_data = []
-    page = 1
-
-    while True:
-        params["page"] = page
-        response = requests.get(endpoint, headers=headers, params=params)
-
-        if response.status_code != 200:
-            print(f"Failed to retrieve data. Status code: {response.status_code}")
-            print(response.text)
-            break
-
-        data = response.json()
-        if not data:
-            break
-
-        all_data.extend(data)
-        page += 1
-
-    return all_data
-
-# Parameters for fetching all products
+# Parameters for API request (Filtering for 'New' opportunity category)
 params = {
-    "fields": "id,identifier,cost",
-    "pageSize": 1000
+    "conditions": "status/id=3 OR status/id=5 AND id>=16000",
+    "fields": "id,name,status,name,customFields",
+    "page": 1,
+    "pageSize": 1000  # Adjust based on API limits
 }
 
-# Fetch all products
-print("Fetching all products from the catalog...")
-all_results = fetch_all_products(endpoint, headers, params)
+# List to store all retrieved data
+all_opportunities = []
 
-# Check if any data was retrieved
-if all_results:
-    # Convert the data to a pandas DataFrame
-    df = pd.DataFrame(all_results)
+# Pagination loop to fetch all pages
+while True:
+    response = requests.get(endpoint, headers=headers, params=params)
 
-    # Save DataFrame to CSV
-    try:
-        df.to_csv(output_path, index=False)
-        print(f"Data successfully written to {output_path}")
-    except Exception as e:
-        print(f"Error writing output file: {e}")
-else:
-    print("No data retrieved.")
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        break  # Exit the loop on error
+
+    data = response.json()  # API response
+
+    # Ensure data is a list (adjust based on API response format)
+    if isinstance(data, list):
+        opportunities = data  # API returned a list directly
+    elif isinstance(data, dict):
+        opportunities = data.get("items", [])  # If API response is a dictionary
+    else:
+        print("Unexpected API response format")
+        break
+
+    if not opportunities:
+        break  # Stop when there's no more data
+
+    # Extract necessary fields and filter by Opportunity Category = "New"
+    for item in opportunities:
+        custom_fields = item.get("customFields", [])
+
+        # Extract specific custom field value (e.g., id 45)
+        field_45 = next((cf.get("value") for cf in custom_fields if cf.get("id") == 45), None)
+
+        # Only include opportunities where Opportunity Category = "New"
+        if field_45 and field_45.lower() == "new":
+            all_opportunities.append({
+                "id": item.get("id"),
+                "name": item.get("name"),
+                "status": item.get("status", {}).get("name"),  # Extract only the status name
+                "Opportunity Category": field_45,  # Include extracted custom field
+            })
+
+    params["page"] += 1  # Move to the next page
+
+# Convert to DataFrame
+df = pd.DataFrame(all_opportunities)
+
+# Output file path
+output_path = r"C:\\users\\jmoore\\documents\\connectwise\\integration\\ns_integration\\statusAudit.csv"
+
+# Save to CSV
+df.to_csv(output_path, index=False)
+
+print(f"Data successfully saved to {output_path}")
