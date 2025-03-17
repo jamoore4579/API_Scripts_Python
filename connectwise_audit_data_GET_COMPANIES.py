@@ -28,7 +28,8 @@ all_items = []
 while True:
     # Query parameters for pagination
     params = {
-        "conditions": "deletedFlag=false AND (status/id=1 OR status/id=13 OR status/is=21)",
+        "conditions": "deletedFlag=false AND (status/id=1 OR status/id=13 OR status/id=21)",
+        "fields": "id,name,state,billingTerms/name",
         "page": page,
         "pageSize": page_size
     }
@@ -59,7 +60,7 @@ if all_items:
     df = pd.DataFrame(all_items)
 
     # Define output file path
-    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\audit\\companies.csv"
+    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\audit\\companies_state.csv"
 
     # Save to CSV
     df.to_csv(output_path, index=False)

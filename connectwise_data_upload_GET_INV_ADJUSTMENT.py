@@ -23,7 +23,7 @@ endpoint = f"{BASE_URL}/procurement/adjustments"
 
 # Parameters for API request
 params = {
-    "conditions": 'closedBy like "TimK%" AND closedDate > [2025-01-08]',
+    "conditions": 'closedBy like "TimK%" AND closedDate > [2025-01-01] AND closedDate < [2025-01-31]',
     "fields": 'id',
     "page": 1,
     "pageSize": 1000  # Adjust based on API limits
@@ -93,7 +93,7 @@ for adjustment_id in adjustment_ids:
 df_details = pd.DataFrame(detailed_data)
 
 # Output file path
-output_path = r"C:\users\jmoore\documents\connectwise\integration\ns_integration\Items\Production\InvAdjustmentDetails.csv"
+output_path = r"C:\users\jmoore\downloads\Jan_InvAdjustmentDetails.csv"
 
 # Save to CSV
 df_details.to_csv(output_path, index=False)
