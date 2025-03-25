@@ -18,13 +18,13 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# API endpoint for sales orders
-endpoint = f"{BASE_URL}/sales/orders"
+# API endpoint for system members
+endpoint = f"{BASE_URL}/system/members"
 
 # Parameters for API request
 params = {
-    "conditions": 'orderDate>=[2025-01-01] AND orderDate<=[2025-01-31]',
-    "fields": 'id',
+    "conditions": 'inactiveFlag=false AND requireTimeSheetEntryFlag=true',
+    "fields": 'id,firstName,lastName,requireExpenseEntryFlag',
     "page": 1,
     "pageSize": 1000  # Adjust based on API limits
 }
@@ -35,16 +35,15 @@ response = requests.get(endpoint, headers=headers, params=params)
 # Check if the request was successful
 if response.status_code == 200:
     data = response.json()
-    sales_order_ids = [order["id"] for order in data]
 
     # Convert to DataFrame
-    df = pd.DataFrame(sales_order_ids, columns=["Sales Order ID"])
+    df = pd.DataFrame(data)
 
     # Define the output file path
-    output_path = r"C:\Users\jmoore\Documents\ConnectWise\Integration\NS_Integration\Items\Production\SoProducts.csv"
+    output_path = r"C:\Users\jmoore\Documents\ConnectWise\company\members_expense.csv"
 
     # Save to CSV
     df.to_csv(output_path, index=False)
-    print(f"Sales Order IDs successfully saved to {output_path}")
+    print(f"Member data successfully saved to {output_path}")
 else:
-    print(f"Failed to retrieve sales order IDs. Status Code: {response.status_code}, Response: {response.text}")
+    print(f"Failed to retrieve member data. Status Code: {response.status_code}, Response: {response.text}")

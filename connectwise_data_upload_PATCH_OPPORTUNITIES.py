@@ -19,24 +19,24 @@ headers = {
 }
 
 # Path to the CSV file
-csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Integration\\NS_Integration\\Opportunity\\Production\\UpdateOpportunity.csv"
-output_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Integration\\NS_Integration\\Opportunity\\Production\\UpdateOpportunityOutput.csv"
+csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\opportunity_se.csv"
+output_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\UpdateOpportunitySE.csv"
 
 # Read the CSV file
 data = pd.read_csv(csv_file_path)
 
 # Check if the required columns exist
-if 'OPP_ID' not in data.columns or 'BUS_ID' not in data.columns:
-    raise ValueError("The CSV file must contain 'OPP_ID' and 'BUS_ID' columns.")
+if 'OPPID' not in data.columns or 'PriSE' not in data.columns:
+    raise ValueError("The CSV file must contain 'OPPID' and 'PriSE' columns.")
 
 # Function to process records
 def process_records(records):
     responses = []
     for index, row in records.iterrows():
-        opp_id = int(row['OPP_ID']) if not pd.isna(row['OPP_ID']) else None
-        bus_id = int(row['BUS_ID']) if not pd.isna(row['BUS_ID']) else None
+        opp_id = int(row['OPPID']) if not pd.isna(row['OPPID']) else None
+        pri_se = row['PriSE'] if not pd.isna(row['PriSE']) else None  # Directly pulling PriSE from the file
 
-        if opp_id is None or bus_id is None:
+        if opp_id is None or pri_se is None:
             print(f"Skipping record with missing data at index {index}")
             continue
 
@@ -44,8 +44,8 @@ def process_records(records):
         patch_data = [
             {
                 "op": "replace",
-                "path": "/businessUnitId",
-                "value": bus_id
+                "path": "/customFields",
+                "value": [{"id": 104, "value": pri_se}]
             }
         ]
 
@@ -57,10 +57,10 @@ def process_records(records):
             response = requests.patch(endpoint, headers=headers, json=patch_data)
             
             # Log the response
-            print(f"Processed OPP_ID: {opp_id}")
+            print(f"Processed OPP_ID: {opp_id} with CustomField: {pri_se}")
             responses.append({
                 "OPP_ID": opp_id,
-                "BUS_ID": bus_id,
+                "PriSE": pri_se,
                 "Status": response.status_code,
                 "Response": response.text
             })
@@ -68,7 +68,7 @@ def process_records(records):
             print(f"Error processing OPP_ID: {opp_id}. Error: {e}")
             responses.append({
                 "OPP_ID": opp_id,
-                "BUS_ID": bus_id,
+                "PriSE": pri_se,
                 "Status": "Error",
                 "Response": str(e)
             })
@@ -92,7 +92,7 @@ if proceed == 'yes':
     remaining_records = data.iloc[5:]
     responses = process_records(remaining_records)
 
-    # Output responses for the remaining records
+    # Append responses for the remaining records
     output_data = pd.DataFrame(responses)
     output_data.to_csv(output_file_path, mode='a', index=False, header=False)
 
