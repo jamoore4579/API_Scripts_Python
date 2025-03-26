@@ -19,24 +19,24 @@ headers = {
 }
 
 # Path to the CSV file
-csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\opportunity_se.csv"
-output_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\UpdateOpportunitySE.csv"
+csv_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\forecastnotes.csv"
+output_file_path = r"c:\\users\\jmoore\\documents\\connectwise\\Opportunity\\forecastnoteoutput.csv"
 
 # Read the CSV file
 data = pd.read_csv(csv_file_path)
 
 # Check if the required columns exist
-if 'OPPID' not in data.columns or 'PriSE' not in data.columns:
-    raise ValueError("The CSV file must contain 'OPPID' and 'PriSE' columns.")
+if 'CWID' not in data.columns or 'NoteValue' not in data.columns:
+    raise ValueError("The CSV file must contain 'CWID' and 'NoteValue' columns.")
 
 # Function to process records
 def process_records(records):
     responses = []
     for index, row in records.iterrows():
-        opp_id = int(row['OPPID']) if not pd.isna(row['OPPID']) else None
-        pri_se = row['PriSE'] if not pd.isna(row['PriSE']) else None  # Directly pulling PriSE from the file
+        opp_id = int(row['CWID']) if not pd.isna(row['CWID']) else None
+        note_value = row['NoteValue'] if not pd.isna(row['NoteValue']) else None  # Directly pulling NoteValue from the file
 
-        if opp_id is None or pri_se is None:
+        if opp_id is None or note_value is None:
             print(f"Skipping record with missing data at index {index}")
             continue
 
@@ -45,7 +45,7 @@ def process_records(records):
             {
                 "op": "replace",
                 "path": "/customFields",
-                "value": [{"id": 104, "value": pri_se}]
+                "value": [{"id": 18, "value": note_value}]
             }
         ]
 
@@ -57,10 +57,10 @@ def process_records(records):
             response = requests.patch(endpoint, headers=headers, json=patch_data)
             
             # Log the response
-            print(f"Processed OPP_ID: {opp_id} with CustomField: {pri_se}")
+            print(f"Processed OPP_ID: {opp_id} with CustomField: {note_value}")
             responses.append({
                 "OPP_ID": opp_id,
-                "PriSE": pri_se,
+                "NoteValue": note_value,
                 "Status": response.status_code,
                 "Response": response.text
             })
@@ -68,7 +68,7 @@ def process_records(records):
             print(f"Error processing OPP_ID: {opp_id}. Error: {e}")
             responses.append({
                 "OPP_ID": opp_id,
-                "PriSE": pri_se,
+                "NoteValue": note_value,
                 "Status": "Error",
                 "Response": str(e)
             })
