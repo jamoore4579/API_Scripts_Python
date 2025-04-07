@@ -31,8 +31,8 @@ def get_companies():
         params = {
             "page": page,
             "pageSize": page_size,
-            "conditions": "deletedFlag=false AND isVendorFlag=false AND (status/id=1 OR status/id=13 OR status/id=17 OR status/id=21)",
-            "fields": "id,name,status/id,status/name,city,state,territory/id,territory/name"
+            "conditions": "deletedFlag=false AND isVendorFlag=true AND (status/id=1 OR status/id=13 OR status/id=17 OR status/id=21)",
+            "fields": "id,name,status/id,status/name,vendorIdentifier,types/name"
         }
 
         response = requests.get(endpoint, headers=headers, params=params)
@@ -57,7 +57,7 @@ if companies:
     df = pd.DataFrame(companies)
     
     # Output file path
-    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\Company\\CompanySiteInfo.csv"
+    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\Company\\VendorInfo.csv"
     
     # Save to CSV
     df.to_csv(output_path, index=False)
