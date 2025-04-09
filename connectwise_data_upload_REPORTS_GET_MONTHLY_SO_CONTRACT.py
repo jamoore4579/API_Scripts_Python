@@ -23,7 +23,7 @@ orders_endpoint = f"{BASE_URL}/sales/orders"
 
 # Parameters for API request (Sales Orders)
 params = {
-    "conditions": "department/id=23 AND orderDate>=[2025-02-01] AND orderDate<=[2025-02-28]",
+    "conditions": "department/id=23 AND orderDate>=[2025-03-01] AND orderDate<=[2025-03-31]",
     "fields": "id,opportunity/id",
     "page": 1,
     "pageSize": 1000  # Adjust based on API limits
