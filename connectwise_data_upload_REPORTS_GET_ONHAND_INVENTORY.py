@@ -18,22 +18,22 @@ headers = {
 }
 
 # File path for output
-output_file_path = r'c:\users\jmoore\documents\connectwise\integration\ns_integration\items\production\Product_Inventory_OnHand.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\Products\Product_Inventory_OnHand42125.csv'
 
-# Function to get all inventory pages with conditions
-def get_all_inventory():
+# Function to get all inventory pages with conditions from a specific warehouse bin
+def get_inventory_from_bin(bin_id):
     inventory_list = []
     page = 1
     while True:
         params = {
-            "conditions": "warehouse/id=4 AND onHand>0",
+            "conditions": "(warehouse/id=3 OR warehouse/id=4) AND onHand>0",
             "page": page
         }
-        inventory_url = f"{BASE_URL}/procurement/warehouseBins/6/inventoryOnHand"
+        inventory_url = f"{BASE_URL}/procurement/warehouseBins/{bin_id}/inventoryOnHand"
         response = requests.get(inventory_url, headers=headers, params=params)
         
         if response.status_code != 200:
-            print(f"Failed to retrieve inventory data on page {page}. Status Code: {response.status_code}, Response: {response.text}")
+            print(f"Failed to retrieve inventory data from bin {bin_id} on page {page}. Status Code: {response.status_code}, Response: {response.text}")
             break
         
         data = response.json()
@@ -64,18 +64,24 @@ def get_all_inventory():
                 "Name": item_name,
                 "On Hand": on_hand,
                 "Cost": cost,
-                "Total Value": total_value
+                "Total Value": total_value,
+                "Bin ID": bin_id
             })
         
         page += 1
     
     return inventory_list
 
-# Get all inventory data
-inventory_list = get_all_inventory()
+# Get inventory data from both bins
+inventory_bin_5 = get_inventory_from_bin(5)
+inventory_bin_6 = get_inventory_from_bin(6)
+
+# Combine inventory data
+combined_inventory = inventory_bin_5 + inventory_bin_6
 
 # Convert list to DataFrame and append to CSV
-df = pd.DataFrame(inventory_list)
+df = pd.DataFrame(combined_inventory)
 write_header = not os.path.exists(output_file_path) or os.stat(output_file_path).st_size == 0
 df.to_csv(output_file_path, mode='a', header=write_header, index=False)
-print(f"Inventory data successfully appended to {output_file_path}")
+
+print(f"Inventory data from bins 5 and 6 successfully appended to {output_file_path}")
