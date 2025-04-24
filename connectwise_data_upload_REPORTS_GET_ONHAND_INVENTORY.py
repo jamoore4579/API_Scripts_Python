@@ -14,11 +14,12 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 # Set up headers for the API request
 headers = {
     "ClientId": CLIENT_ID,
-    "Authorization": "Basic " + AUTH_CODE
+    "Authorization": "Basic " + AUTH_CODE,
+    "Content-Type": "application/json"
 }
 
 # File path for output
-output_file_path = r'c:\users\jmoore\documents\connectwise\Products\Product_Inventory_OnHand42125.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\Products\Product_Inventory_OnHandMW42325.csv'
 
 # Function to get all inventory pages with conditions from a specific warehouse bin
 def get_inventory_from_bin(bin_id):
@@ -26,7 +27,7 @@ def get_inventory_from_bin(bin_id):
     page = 1
     while True:
         params = {
-            "conditions": "(warehouse/id=3 OR warehouse/id=4) AND onHand>0",
+            "conditions": "(warehouse/id=4) AND onHand>0",
             "page": page
         }
         inventory_url = f"{BASE_URL}/procurement/warehouseBins/{bin_id}/inventoryOnHand"
@@ -44,6 +45,7 @@ def get_inventory_from_bin(bin_id):
             item_id = item.get("catalogItem", {}).get("id")
             item_name = item.get("catalogItem", {}).get("identifier")
             on_hand = item.get("onHand")
+            warehouse_name = item.get("warehouse", {}).get("name")
             cost = None
             total_value = None
             
@@ -65,6 +67,7 @@ def get_inventory_from_bin(bin_id):
                 "On Hand": on_hand,
                 "Cost": cost,
                 "Total Value": total_value,
+                "Warehouse": warehouse_name,
                 "Bin ID": bin_id
             })
         
@@ -72,16 +75,12 @@ def get_inventory_from_bin(bin_id):
     
     return inventory_list
 
-# Get inventory data from both bins
-inventory_bin_5 = get_inventory_from_bin(5)
+# Get inventory data only from bin 6
 inventory_bin_6 = get_inventory_from_bin(6)
 
-# Combine inventory data
-combined_inventory = inventory_bin_5 + inventory_bin_6
-
 # Convert list to DataFrame and append to CSV
-df = pd.DataFrame(combined_inventory)
+df = pd.DataFrame(inventory_bin_6)
 write_header = not os.path.exists(output_file_path) or os.stat(output_file_path).st_size == 0
 df.to_csv(output_file_path, mode='a', header=write_header, index=False)
 
-print(f"Inventory data from bins 5 and 6 successfully appended to {output_file_path}")
+print(f"Inventory data from bin 5 successfully appended to {output_file_path}")

@@ -23,15 +23,15 @@ headers = {
 }
 
 # File paths
-input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandSE.csv'
-output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputSE42125.csv'
+input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryAdjustment.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputMW42325.csv'
 
 # Load ProductIDs
 df_input = pd.read_csv(input_file_path)
 product_ids = df_input["ProductID"].dropna().unique()
 
 # API endpoint
-endpoint = f"{BASE_URL}/procurement/warehouseBins/5/inventoryOnHand"
+endpoint = f"{BASE_URL}/procurement/warehouseBins/6/inventoryOnHand"
 
 # Accumulator for results
 all_results = []

@@ -23,8 +23,8 @@ headers = {
 }
 
 # File paths
-input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputMW42125.csv'
-output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputMWcost42125.csv'
+input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputSE42325.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputSEcost42325.csv'
 
 # Load ProductIDs
 df_input = pd.read_csv(input_file_path)
