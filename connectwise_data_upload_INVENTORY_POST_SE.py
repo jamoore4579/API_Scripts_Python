@@ -24,7 +24,7 @@ headers = {
 }
 
 # Load CSV
-input_file_path = r"c:\users\jmoore\documents\connectwise\Products\InventoryOnHandMWv3.csv"
+input_file_path = r"c:\users\jmoore\documents\connectwise\Products\InventoryOnHandSE.csv"
 df = pd.read_csv(input_file_path)
 
 # Drop rows with missing required values
@@ -81,16 +81,16 @@ for index, row in df.iterrows():
             "quantityOnHand": 0,
             "unitCost": cost,
             "warehouse": {
-                "id": 4
+                "id": 3
             },
             "warehouseBin": {
-                "id": 6
+                "id": 5
             },
             "quantityAdjusted": Count,
             "serialNumber": f"{Serial}",
             "adjustment": {
-                "id": 173,
-                "name": "WarehouseMWUpdateCostv3"
+                "id": 175,
+                "name": "WarehouseSEUpdateCostv1"
             }
         }
 
@@ -102,16 +102,16 @@ for index, row in df.iterrows():
 # Build and send the payload
 if adjustment_details:
     payload = {
-        "id": 173,
-        "identifier": "WarehouseMWUpdateCostv3",
+        "id": 175,
+        "identifier": "WarehouseSEUpdateCostv1",
         "type": {
             "id": 3
         },
-        "reason": "Updating the cost to the MW inventory.",
+        "reason": "Updating the cost to the SE inventory.",
         "adjustmentDetails": adjustment_details
     }
 
-    endpoint = f"{BASE_URL}/procurement/adjustments/173"
+    endpoint = f"{BASE_URL}/procurement/adjustments/175"
     response = requests.put(endpoint, headers=headers, json=payload)
 
     if response.status_code == 200:

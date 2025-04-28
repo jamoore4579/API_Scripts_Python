@@ -23,8 +23,8 @@ headers = {
 }
 
 # File paths
-input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputSE42325.csv'
-output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandOutputSEcost42325.csv'
+input_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandSE.csv'
+output_file_path = r'c:\users\jmoore\documents\connectwise\Products\InventoryOnHandSEcost42425.csv'
 
 # Load ProductIDs
 df_input = pd.read_csv(input_file_path)
@@ -49,17 +49,18 @@ for product_id in product_ids:
 
     if response.status_code != 200:
         print(f"Error for {product_id}: {response.status_code} - {response.text}")
+        cost_lookup[product_id] = None
         continue
 
     data = response.json()
-    if data and isinstance(data, list) and "identifier" in data[0]:
+    if isinstance(data, list) and len(data) > 0 and "identifier" in data[0]:
         cost_lookup[product_id] = data[0].get("cost", None)
     else:
         cost_lookup[product_id] = None
 
-# Append cost to original DataFrame
+# Append the cost column to the original DataFrame
 df_input["cost"] = df_input["id"].map(cost_lookup)
 
-# Export to CSV
+# Export to CSV with all original columns plus the cost
 df_input.to_csv(output_file_path, index=False)
 print(f"Exported {len(df_input)} records with cost to {output_file_path}")
