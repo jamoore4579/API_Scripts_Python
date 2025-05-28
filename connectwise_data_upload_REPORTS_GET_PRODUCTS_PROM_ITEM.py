@@ -26,7 +26,7 @@ valid_prefixes = ("AP9-A", "AP9-B", "AP7-B", "AP7-U", "AP7E-B", "AP7E-U")
 
 # Define base query parameters
 params = {
-    "conditions": "(warehouseId=3) OR (warehouseId=4)",
+    # "conditions": "(warehouseId=3) OR (warehouseId=4)",
     "fields": "catalogItem/identifier,id",
     "page": 1,
     "pageSize": 1000
@@ -82,7 +82,7 @@ for product in products:
     product.update(details)
 
 # Output file path
-output_file = r"C:\\users\\jmoore\\documents\\connectwise\\products\\Product040925.csv"
+output_file = r"C:\\users\\jmoore\\documents\\connectwise\\products\\Product050625.csv"
 
 # Save filtered data to CSV
 if products:

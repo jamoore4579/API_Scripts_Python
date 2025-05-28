@@ -19,11 +19,11 @@ headers = {
 }
 
 # API endpoint
-endpoint = f"{BASE_URL}/company/contacts"
+endpoint = f"{BASE_URL}/project/projects"
 
-# Fetch all contacts data
-def get_contacts():
-    all_contacts = []
+# Fetch all projects data
+def get_projects():
+    all_projects = []
     page = 1
     page_size = 100  # Adjust as needed
 
@@ -31,8 +31,8 @@ def get_contacts():
         params = {
             "page": page,
             "pageSize": page_size,
-            "conditions": "inactiveFlag=false",
-            "fields": "id,firstName,lastName,company/id,company/identifier"
+            "conditions": "((status/id=8 OR status/id=2) AND estimatedEnd>=[2025-02-01T00:00:00Z] AND estimatedEnd<=[2025-05-31T23:59:59Z])",
+            "fields": "id,actualHours,status/name,percentComplete,estimatedEnd"
         }
 
         response = requests.get(endpoint, headers=headers, params=params)
@@ -41,23 +41,27 @@ def get_contacts():
             data = response.json()
             if not data:
                 break
-            all_contacts.extend(data)
+            all_projects.extend(data)
             page += 1
         else:
             print(f"Failed to fetch data: {response.status_code} - {response.text}")
             break
 
-    return all_contacts
+    return all_projects
 
 # Retrieve data
-contacts = get_contacts()
+projects = get_projects()
 
-# Convert to DataFrame and save as CSV
-if contacts:
-    df = pd.DataFrame(contacts)
-    
+# Convert to DataFrame and clean up estimatedEnd
+if projects:
+    df = pd.DataFrame(projects)
+
+    # Clean 'estimatedEnd' column: remove time part if it exists
+    if 'estimatedEnd' in df.columns:
+        df['estimatedEnd'] = df['estimatedEnd'].str.replace(r'T.*Z', '', regex=True)
+
     # Output file path
-    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\Company\\ContactInfo051625.csv"
+    output_path = r"C:\\users\\jmoore\\documents\\connectwise\\projects\\ProjectInfo052725.csv"
     
     # Save to CSV
     df.to_csv(output_path, index=False)
